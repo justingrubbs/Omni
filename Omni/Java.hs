@@ -1,152 +1,68 @@
-
--- {-# LANGUAGE RankNTypes #-} 
-
-module Omni.Java
+module Omni.Java 
    (
       javaParse, checkJavaParse, printJava
    )
-   where
+   where 
 
-import            Control.Applicative        (empty)
-import            Control.Monad              (void)
-import            Control.Monad.Combinators.Expr
-import            Text.Megaparsec
-import            Text.Megaparsec.Char
-import qualified  Text.Megaparsec.Char.Lexer as L
-import            Omni.Data
-import            Data.Void
 
-type Parser = Parsec Void String
+import            Omni.Data 
+import qualified  Language.Java.Parser    as P
+import qualified  Language.Java.Syntax    as S
 
--- Some of the basic code/structure taken from:
-   -- https://markkarpov.com/megaparsec/parsing-simple-imperative-language.html
-   -- https://github.com/mrkkrp/megaparsec-site/blob/master/tutorials/parsing-simple-imperative-language.md
-   -- https://github.com/disco-lang/disco/tree/master/src/Disco
 
--- Lexing
----------------------------------------------------------------------
+-- Absurd
+{- CompilationUnit Nothing [] [ClassTypeDecl (ClassDecl [public] (Ident "pyTest") [] Nothing [] 
+   (ClassBody [MemberDecl (MethodDecl [public,static] [] Nothing (Ident "main") 
+   [FormalParam [] (RefType (ArrayType (RefType (ClassRefType (ClassType [(Ident "String",[])]))))) 
+   False (VarId (Ident "args"))] [] Nothing (MethodBody (Just (Block [LocalVars [] (PrimType IntT) 
+   [VarDecl (VarId (Ident "x")) (Just (InitExp (Lit (Int 3))))],LocalVars [] (PrimType BooleanT) 
+   [VarDecl (VarId (Ident "y")) (Just (InitExp (Lit (Boolean True))))]]))))]))]  -}
 
-lineComment :: Parser ()
-lineComment = L.skipLineComment "//"
 
-scn :: Parser ()  -- Space consumer that consumes newlines
-scn = L.space (void spaceChar) lineComment empty
+javaParse :: String -> Either String Prog 
+javaParse txt = 
+   case P.parser P.compilationUnit txt of 
+      Left  err -> error (show err)
+      Right x   -> Right (convertJavaAST x) 
 
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme scn
+convertExpr :: S.Exp -> Expr 
+convertExpr (S.Lit x) = 
+   case x of 
+      S.Int y     -> EInt y 
+      S.Boolean y -> EBool y
+      _           -> OtherE 
+convertExpr (S.ExpName (S.Name (S.Ident name:_))) = EVar name
 
-symbol :: String -> Parser String
-symbol = L.symbol scn
+convertStmt :: S.Stmt -> Stmt
+convertStmt (S.ExpStmt (S.Assign (S.NameLhs (S.Name (S.Ident name:_))) _ x)) = Assign name (convertExpr x)
 
-reservedOp :: String -> Parser ()
-reservedOp s = (lexeme . try) (string s *> notFollowedBy (oneOf opChar))
+convertVar :: S.VarDecl -> Type -> Stmt 
+convertVar (S.VarDecl (S.VarId (S.Ident name)) maybe) t = 
+   case maybe of 
+      Nothing -> Declare t name
+      Just x  -> 
+         case x of 
+            S.InitExp y -> DAndA t name (convertExpr y)
+            _           -> OtherS
+convertVar x _ = error ("Bad pattern match in convertVar =(\nThe problem: " ++ show x) -- replace iwth other prob?
 
-opChar :: [Char]
-opChar = "~!@#$%^&*-+=|<>?/\\.'\""
+convertBlock :: S.BlockStmt -> Stmt
+convertBlock (S.BlockStmt x)     = convertStmt x 
+convertBlock (S.LocalVars _ (S.PrimType t) (x:_)) = convertVar x (convertType t)
 
-pChar :: Parser Char 
-pChar = lexeme L.charLiteral
+convertType :: S.PrimType -> Type 
+convertType S.IntT = TyInt
+convertType S.BooleanT = TyBool 
+convertType _ = undefined
 
-integer :: Parser Integer
-integer = lexeme L.decimal
-
-float :: Parser Float
-float = lexeme L.float
-
-parens, curly, angles, brackets, sQuotes, dQuotes :: Parser a -> Parser a
-parens   = between (symbol "(") (symbol ")")
-curly    = between (symbol "{") (symbol "}")
-angles   = between (symbol "<") (symbol ">")
-brackets = between (symbol "[") (symbol "]")
-sQuotes  = between (symbol "'") (symbol "'")
-dQuotes  = between (symbol "\"") (symbol "\"")
-
-semi, comma, colon, dot, pipe, hash :: Parser String
-semi  = symbol ";"
-comma = symbol ","
-colon = symbol ":"
-dot   = symbol "."
-pipe  = symbol "|"
-hash  = symbol "#"
-
-reserved :: String -> Parser ()
-reserved w = (lexeme . try) $ string w *> notFollowedBy alphaNumChar
-
-reservedWords :: [String]
-reservedWords = ["int", "System", "out", "println", "true", "false", "boolean", "if", "else", "String", "char"]
-
-identifier :: Parser String
-identifier = (lexeme . try) (p >>= check)
-   where
-      p       = (:) <$> letterChar <*> many alphaNumChar
-      check x =
-         if x `elem` reservedWords
-         then fail $ "keyword " ++ show x ++ " cannot be an identifier"
-         else return x
-
--- Parsing
----------------------------------------------------------------------
-
-parseType :: Parser Type
-parseType = TyInt <$ reserved "int"
-   <|> TyBool <$ reserved "boolean"
-   <|> TyChar <$ reserved "char"
-
-parseExprAtom :: Parser Expr
-parseExprAtom = EInt <$> integer
-   <|> (EBool True <$ reserved "true" <|> EBool False <$ reserved "false")
-   <|> EChar <$> sQuotes L.charLiteral
-   <|> EVar <$> identifier
-   <|> parens parseExpr
- 
-parseExpr :: Parser Expr 
-parseExpr = makeExprParser parseExprAtom operators 
-
-operators :: [[Operator Parser Expr]]
-operators = 
-   [  [ Prefix (Un Neg <$ symbol "-")
-      , Prefix (Un Not <$ symbol "!") ]
-
-   ,  [ InfixL (Bin Mul <$ symbol "*")
-      , InfixL (Bin Div <$ symbol "/") 
-      , InfixL (Bin Mod <$ symbol "%") ]
-
-   ,  [ InfixL (Bin Add <$ symbol "+")
-      , InfixL (Bin Sub <$ symbol "-") ]
-
-   ,  [ InfixL (Bin LessEq <$ reservedOp "<=") 
-      , InfixL (Bin GreaterEq <$ reservedOp ">=" )
-      , InfixL (Bin Less <$ symbol "<") 
-      , InfixL (Bin Greater <$ symbol ">")  ]
-
-   ,  [ InfixL (Bin Eq <$ reservedOp "==") 
-      , InfixL (Bin NEq <$ reservedOp "!=") ]
-
-   ,  [ InfixL (Bin And <$ reservedOp "&&") ]
-
-   ,  [ InfixL (Bin Or <$ reservedOp "||") ]
-
-   ]
-
-parseStmt :: Parser Stmt
-parseStmt = Output <$> (reserved "System" *> dot
-      *> reserved "out" *> dot
-      *> reserved "println" *> parens parseExpr)
-   <|> try (DAndA <$> parseType <*> identifier <*> (reservedOp "=" *> parseExpr))
-   <|> Assign <$> identifier <*> (reservedOp "=" *> parseExpr)
-   <|> Declare <$> parseType <*> identifier
-
-parseProg :: Parser Prog
-parseProg = endBy parseStmt semi
-
-parseDoc :: Parser Prog
-parseDoc = between scn eof parseProg
-
-oParse :: Parser a -> String -> Either (ParseErrorBundle String Void) a
-oParse p = parse p ""
-
-javaParse :: String -> Either (ParseErrorBundle String Void) Prog
-javaParse = oParse parseDoc
+convertJavaAST :: S.CompilationUnit -> Prog 
+convertJavaAST (S.CompilationUnit _ _ x) = 
+   case x of 
+      [S.ClassTypeDecl (S.ClassDecl _ _ _ _ _ (S.ClassBody (S.MemberDecl (S.MethodDecl _ _ _ _ _ _ _ (S.MethodBody y)) : rest)))] -> 
+         case y of 
+            Nothing           -> []
+            Just (S.Block z)  -> map convertBlock z
+      _ -> undefined
 
 checkJavaParse :: FilePath -> IO ()
 checkJavaParse file = do
@@ -159,12 +75,11 @@ checkJavaParse file = do
 -- Pretty-Printing:
 ---------------------------------------------------------------------
 
--- Will be used to add def main(): to beginning and main() and such.
-printJava :: Prog -> String 
-printJava = prettyJava ""
+printJava :: String -> Prog -> String 
+printJava name prog = "public class " ++ name ++ " {\n\tpublic static void main(String[] args) {\n" ++ prettyJava "" prog ++ "\n\t}\n}"
 
 prettyJava :: String -> Prog -> String
-prettyJava = foldl (\ text x -> text ++ printStmt x ++ ";\n")
+prettyJava = foldl (\ text x -> text ++ "\t\t" ++ printStmt x ++ ";\n")
 
 printStmt :: Stmt -> String
 printStmt (Assign var e)     = var ++ " = " ++ printExpr e

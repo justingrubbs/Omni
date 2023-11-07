@@ -137,16 +137,19 @@ toJava s txt =
 -- The lefts of translate and typecheck should be specific errors but whatever for now -- probably elsewhere as well
 -- STILL NEED TO DO SOME TYPE CHECKING FOR JAVA? JUST FOR CONSISTENCY? UNDEFINED VARS AND SUCH
 translate :: String -> String -> Lang -> Lang -> Either String String
-translate txt name Python new =
-   case pyParse txt name of
-      Left err -> Left $ show err
-      Right p  -> do
-         p' <- typeCheck p
-         Right (prettyPrint new p')
-translate txt _ Java   new =
-   case javaParse txt of
-      Left err -> Left $ show err
-      Right p  -> Right (prettyPrint new p)
+translate txt name lang new = do
+   let (name',_) = stripExtension "" name
+   case lang of 
+      Python -> 
+         case pyParse txt name of
+            Left err -> Left $ show err
+            Right p  -> do
+               p' <- typeCheck p
+               Right (prettyPrint new name' p')
+      Java -> 
+         case javaParse txt of
+            Left err -> Left $ show err
+            Right p  -> Right (prettyPrint new name' p)
 
 typeCheck :: Prog -> Either String Prog
 typeCheck p =
@@ -154,9 +157,9 @@ typeCheck p =
       Left err -> Left $ show err
       Right x  -> Right x
 
-prettyPrint :: Lang -> Prog -> String
-prettyPrint Python = printPython
-prettyPrint Java   = printJava
+prettyPrint :: Lang -> String -> Prog -> String
+prettyPrint Python _    = printPython
+prettyPrint Java   name = printJava name
 
 parseCheck ::  Lang -> FilePath -> IO ()
 parseCheck lang =

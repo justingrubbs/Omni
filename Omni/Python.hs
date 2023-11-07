@@ -33,13 +33,8 @@ convertStmt (PC.Assign targets expr _) =
 convertStmt (PC.Print _ (expr : _) _ _) = Output (convertExpr expr) -- Might be wrong, idk what srcSpan is 
 convertStmt _ = OtherS
 
-convertStatements :: [PC.StatementSpan] -> [Stmt]
-convertStatements = map convertStmt 
-   -- so every time I have manually iterated through a list and 
-   -- did some stuff I could've just used map?
-
 convertPythonAST :: PC.ModuleSpan -> [Stmt]
-convertPythonAST (PC.Module prog) = convertStatements prog
+convertPythonAST (PC.Module prog) = map convertStmt prog
 
 checkPyParse :: FilePath -> IO ()
 checkPyParse file = do
