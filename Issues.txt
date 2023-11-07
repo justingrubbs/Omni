@@ -1,0 +1,19 @@
+ - Binary operations do not pretty-print parentheses
+ - Comments don't work in either Java or Python
+ - Python does not like empty lines in files -- parse errors
+ - Python allows for `x, y, z = True`
+   -  Also need to allow for assignments like `x += 3`
+   -  New ADT for assignments specifically?
+ - Still need to do some type-checking for Java, just no reconstruction, right?
+ - Won't implementing functions be far easier than anticipated? 
+   - "Implementing" functions is just parsing them and pretty-printing them 
+   - Will almost certainly cause some issues with types, but that will be the only issues I can see
+ - Java terminators ';' and '}'
+   -  Parsing a stmt as either a single line or a block, but does that cause issues with functions, as they require {}?
+ - Python detecting tab/columns
+
+"Static-Type Checking:
+   - Verify safety of program before execution.
+Dynamic Type Checking: 
+   - Verify safety of program at execution."
+

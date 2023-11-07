@@ -1,0 +1,31 @@
+elabAssign :: Int -> Ctx -> SCtx -> TCtx -> Prog -> Prog -> Either TypeError (Prog, Ctx)
+elabAssign i ctx sCtx vCtx nProg (Assign x e : rest) = do
+   let e' = getVars vCtx e
+   ty <- infer ctx e' 
+   case M.lookup x ctx of 
+      Nothing -> elaborateProg i (M.insert x ty ctx) sCtx vCtx 
+         (DAndA ty x e' : nProg) rest -- Defines variables
+      Just y  -> 
+         if x `elem` M.elems vCtx
+         then  
+            let (x', i') = genVar i ctx 
+            in elaborateProg i (M.insert x' ty ctx) sCtx (M.insert x x' vCtx) 
+               (DAndA ty x' e' : nProg) rest
+         else
+            if y == ty
+            then elaborateProg i ctx sCtx (M.delete x vCtx) 
+               (Assign x e' : nProg) rest
+            else 
+               case M.lookup x sCtx of 
+                  Just vList -> 
+                     case testSubVars ctx ty vList of 
+                        Just z  -> elaborateProg i ctx sCtx (M.insert x z vCtx) 
+                           (Assign z e' : nProg) rest
+                        Nothing ->
+                           let (x', i') = genVar i ctx
+                           in elaborateProg i' (M.insert x' ty ctx) (M.insert x (vList ++ [x']) sCtx) 
+                              (M.insert x x' vCtx) (DAndA ty x' e' : nProg) rest
+                  Nothing   -> 
+                     let (x', i') = genVar i ctx
+                     in elaborateProg i' (M.insert x' ty ctx) (M.insert x [x'] sCtx) 
+                        (M.insert x x' vCtx) (DAndA ty x' e' : nProg) rest -- This is variable generation stuff

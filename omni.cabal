@@ -1,0 +1,36 @@
+cabal-version:      2.4
+name:               omni
+version:            0.1.0.0
+-- synopsis:
+-- description:
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             Justin Grubbs
+maintainer:         grubbsjr@hendrix.edu
+-- copyright:
+category:           Language
+build-type:         Simple
+
+common warnings
+    ghc-options: -Wall
+
+executable omni
+   --  import:             warnings     
+    main-is:            OmniREPL.hs
+    other-modules:      Omni.Data, 
+                        Omni.Python,
+                        Omni.Java,
+                        Omni.Typecheck
+    -- other-extensions:   
+    build-depends:      base >= 4.14.1.0 && < 4.19,
+                        directory,
+                        filepath,
+                        mtl,
+                        megaparsec,
+                        containers,
+                        haskeline,
+                        parser-combinators,
+                        language-python,
+                        language-java
+    default-language:   Haskell2010
+

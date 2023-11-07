@@ -1,0 +1,100 @@
+:q
+:q
+:parse pyTest.py
+:q
+:parse pyTest.py
+:q
+:toJava pyTest.py
+:parse pyTest.py
+:toJava pyTest.py
+:parse pyTest.py
+:toJava pyTest.py
+:parse pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:parse' pyTest.py
+:q
+:parse pyTest.py
+:toJava pyTest.py
+:parse pyTest.py
+:q
+:toJava pyTest.py
+:parse pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:toPython pyTest.jav
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toPython pyTest.jav
+:toJava pyTest.py
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:r
+:toJava pyTest.py
+sfjdijfewf 223
+sfjdijf
+:toJava pyTest.py 332f2f
+sfjdijf
+:toJava pyTest.py 332f2f
+:toJava pyTest.py 3
+:toJava pyTest.py
+:q
+:r
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toPython pyTest.jav
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:toPython pyTest.jav
+:toJava pyTest.py
+:q
+:toJava pyTest.py
+:q
+:toJava pyTest.py
