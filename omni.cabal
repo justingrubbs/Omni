@@ -12,10 +12,10 @@ category:           Language
 build-type:         Simple
 
 common warnings
-    ghc-options: -Wall
+    ghc-options: -Wincomplete-patterns
 
 executable omni
-   --  import:             warnings     
+    import:             warnings     
     main-is:            OmniREPL.hs
     other-modules:      Omni.Data, 
                         Omni.Python,
@@ -26,10 +26,8 @@ executable omni
                         directory,
                         filepath,
                         mtl,
-                        megaparsec,
                         containers,
                         haskeline,
-                        parser-combinators,
                         language-python,
                         language-java
     default-language:   Haskell2010

@@ -38,7 +38,7 @@ description = "\nWelcome to Omni:\n\n\
    \  Omni is a program for transcribing programming language files.\n\
    \  Omni currently only supports Python and Java files.\n\n\
    \Commands:\n\
-   \  :toPython [file name]   -- Transcribe a program to Python\n\
+   \  :toPy [file name]   -- Transcribe a program to Python\n\
    \  :toJava [file name]     -- Transcribe a program to Java\n\
    \  :quit                   -- Exit\n"
 
@@ -64,12 +64,12 @@ omniREPL = do
                      x           ->
                         -- Was just using (cmd:r:rest) but this caused error message when `:q` or `:quit`
                         -- However, doing this at all allows weird stuff like:
-                           -- `:parse javaTest.jav javaTest.jav ldfjkls dfofnic`
+                           -- `:parse javaTest.java javaTest.java ldfjkls dfofnic`
                         let (r:rest') = rest
                         in case x of
-                           ":toPython" -> toPy   r (readFile r)         >> return True
-                           ":toJava"   -> toJava r (readFile r)         >> return True
-                           ":parse"    ->
+                           ":toPy"   -> toPy   r (readFile r)         >> return True
+                           ":toJava" -> toJava r (readFile r)         >> return True
+                           ":parse"   ->
                               let (fName, ext) = stripExtension "" r
                               in liftIO $ parseCheck (extToLang ext) r  >> return True  -- Will be removed at some point
                            _           -> lift (outputStrLn ("Error: " ++ s))       >> return True
@@ -90,15 +90,15 @@ pySave s doc = do
 
 javaSave :: String -> String -> OmniM ()
 javaSave s doc = do
-   liftIO $ maybe (return ()) (writeFile (s ++ ".jav")) (Just doc)
+   liftIO $ maybe (return ()) (writeFile (s ++ ".java")) (Just doc)
    lift $ outputStrLn ("The file has been successfully created: \
-   \" ++ s ++ ".jav")
+   \" ++ s ++ ".java")
 
 extToLang :: String -> Lang
 extToLang x =
    case x of
       "py"   -> Python
-      "jav"  -> Java
+      "java"  -> Java
       y      -> error ("Extension " ++ y ++ " is not supported.")
 
 toPy :: String -> IO String -> OmniM ()
@@ -120,7 +120,7 @@ toPy s txt =
 toJava :: String -> IO String -> OmniM ()
 toJava s txt =
    let (fName, ext) = stripExtension "" s
-   in if ext == "jav"
+   in if ext == "java"
       then lift $ outputStrLn "The file is already a Java file."
       else do
          txt' <- liftIO txt

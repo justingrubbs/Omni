@@ -18,27 +18,34 @@ data Type where
    TyBool :: Type
    TyChar :: Type
    TyStr  :: Type
+   TyArr  :: Type -> Type
    TVar   :: Var -> Type
+   OtherT :: String -> Type
    deriving (Show, Eq)
 
 data Stmt where 
    Assign  :: Var -> Expr -> Stmt 
-   Declare :: Type -> Var -> Stmt
-   DAndA   :: Type -> Var -> Expr -> Stmt
+   Declare :: Type -> Var -> Maybe Expr -> Stmt
    Output  :: Expr -> Stmt
    Block   :: Prog -> Stmt
-   OtherS  :: Stmt
+   OtherS  :: String -> Stmt
    deriving Show 
 
 data Expr where 
-   EInt  :: Integer -> Expr 
-   EBool :: Bool -> Expr
-   EChar :: Char -> Expr
-   EStr  :: String -> Expr
-   EVar  :: Var -> Expr 
-   Bin   :: BOp -> Expr -> Expr -> Expr
-   Un    :: UOp -> Expr -> Expr
-   OtherE :: Expr
+   Lit    :: Literal -> Expr
+   EVar   :: Var -> Expr 
+   Array  :: [Expr] -> Expr 
+   Bin    :: BOp -> Expr -> Expr -> Expr
+   Un     :: UOp -> Expr -> Expr
+   OtherE :: String -> Expr
+   deriving Show
+
+data Literal where 
+   LInt   :: Integer -> Literal 
+   LBool  :: Bool -> Literal 
+   LChar  :: Char -> Literal 
+   LStr   :: String -> Literal 
+   OtherL :: String -> Literal
    deriving Show
 
 -- https://www.w3schools.com/python/python_operators.asp
@@ -46,13 +53,15 @@ data Expr where
 
 -- Java does not have exponentiation built in?
 -- Later, could maybe use Math.pow() or whatever add the import in if exp is used 
+
 data BOp = Add | Sub | Mul | Div | Mod
-   | AddAssign | SubAssign | MulAssign | DivAssign | ModAssign | ExpAssign
+   | AddAssign | SubAssign | MulAssign | DivAssign | ModAssign
    | And | Or | Eq | NEq | Less | Greater | LessEq | GreaterEq
-   | BWAnd | BWOr | XOR | BWNot | LShift | RShift  --Bitwise operations
+   | BWAnd | BWOr | XOR | BWNot | LShift | RShift  -- Bitwise operations
+   | OtherB String
    deriving (Show, Eq)
 
-data UOp = Not | Neg | Incr | Decr
+data UOp = Not | Neg | Incr | Decr | OtherU String
    deriving (Show, Eq)
 
 data TypeError where 

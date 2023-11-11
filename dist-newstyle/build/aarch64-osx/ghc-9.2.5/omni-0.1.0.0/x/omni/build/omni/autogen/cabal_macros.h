@@ -80,16 +80,6 @@
   (major1) == 0 && (major2) <  5 || \
   (major1) == 0 && (major2) == 5 && (minor) <= 8)
 #endif /* MIN_VERSION_language_python */
-/* package megaparsec-9.6.0 */
-#ifndef VERSION_megaparsec
-#define VERSION_megaparsec "9.6.0"
-#endif /* VERSION_megaparsec */
-#ifndef MIN_VERSION_megaparsec
-#define MIN_VERSION_megaparsec(major1,major2,minor) (\
-  (major1) <  9 || \
-  (major1) == 9 && (major2) <  6 || \
-  (major1) == 9 && (major2) == 6 && (minor) <= 0)
-#endif /* MIN_VERSION_megaparsec */
 /* package mtl-2.2.2 */
 #ifndef VERSION_mtl
 #define VERSION_mtl "2.2.2"
@@ -100,16 +90,6 @@
   (major1) == 2 && (major2) <  2 || \
   (major1) == 2 && (major2) == 2 && (minor) <= 2)
 #endif /* MIN_VERSION_mtl */
-/* package parser-combinators-1.3.0 */
-#ifndef VERSION_parser_combinators
-#define VERSION_parser_combinators "1.3.0"
-#endif /* VERSION_parser_combinators */
-#ifndef MIN_VERSION_parser_combinators
-#define MIN_VERSION_parser_combinators(major1,major2,minor) (\
-  (major1) <  1 || \
-  (major1) == 1 && (major2) <  3 || \
-  (major1) == 1 && (major2) == 3 && (minor) <= 0)
-#endif /* MIN_VERSION_parser_combinators */
 
 /* tool gcc-14.0.0 */
 #ifndef TOOL_VERSION_gcc
