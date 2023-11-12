@@ -23,11 +23,14 @@ data Type where
    OtherT :: String -> Type
    deriving (Show, Eq)
 
+-- apparently for loops are just while loops, makes sense but didn't know
 data Stmt where 
-   Assign  :: Var -> Expr -> Stmt 
-   Declare :: Type -> Var -> Maybe Expr -> Stmt
+   Assign  :: [Var] -> Expr -> Stmt 
+   Declare :: Type -> [Var] -> Maybe Expr -> Stmt
    Output  :: Expr -> Stmt
    Block   :: Prog -> Stmt
+   IfThen  :: Expr -> Stmt -> Stmt 
+   IfElse  :: Expr -> Stmt -> Stmt -> Stmt 
    OtherS  :: String -> Stmt
    deriving Show 
 

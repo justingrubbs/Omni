@@ -1,13 +1,26 @@
 public class test {
 	public static void main(String[] args) {
+      char o = 'y';
 		int x = 3;
-		boolean A = true;
+		x = 10;
+		int y,z = y = 10;
+		boolean[] A = {true};
+		boolean B,C,D = C = B = false;
+		boolean E = true;
 		x = 3 / 10 - 7 + 5;
-		boolean B = true;
+		B = true;
 		B = 3 <= 4;
 		B = 3 > 4;
-		boolean[] C = {true,B};
-		int[] D = {1,2,3};
-      
+		boolean[] F = {true,B};
+		int[] G = {1,2,3};
+		String H = "Test!";
+		char I = 'Q';
+		// <Type unknown>[] J = {};
+
+      if (2 == 2) {
+         H = "Wrong";
+         B = false;
+      } 
+
 	}
 }

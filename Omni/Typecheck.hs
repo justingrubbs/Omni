@@ -9,6 +9,7 @@ module Omni.Typecheck
 
 import            Omni.Data
 import qualified  Data.Map as M
+import            Debug.Trace
 
 
 -- https://en.wikipedia.org/wiki/Comparison_of_programming_languages_by_type_system
@@ -25,13 +26,15 @@ type SCtx = M.Map Var [Var] -- Context containing the original variable mapped t
 progEdit :: Prog -> Either TypeError Prog
 progEdit p = do
    (prog, ctx) <- elaborateProg 0 M.empty M.empty M.empty [] p
-   -- error $ "\n\nOriginal prog: " ++ show p ++ "\n\nNew prog: " ++ show prog ++ "\n\n"
+   -- trace ("Original prog " ++ show p) $ pure ()
+   -- trace ("New prog " ++ show prog) $ pure ()
    Right prog
 
 -- Create function that will check every statement for variables and update them according to tVar
 getExpr :: TCtx -> Stmt -> Stmt
 getExpr tCtx (Assign x e) = Assign x (getVars tCtx e)
 getExpr tCtx (Output x)   = Output (getVars tCtx x)
+getExpr tCtx (IfThen e s) = IfThen (getVars tCtx e) (getExpr tCtx s)
 getExpr tCtx x            = error $ show x ++ " was not intended to be in prog"
 
 getVars :: TCtx -> Expr -> Expr
@@ -42,21 +45,21 @@ getVars tCtx (Array x)      = Array (map (getVars tCtx) x)
 getVars _    x              = x
 
 eng :: String
-eng = "ABCDEFGHIJKLMNOPQRSTUV"  -- Arbitrary letters, is there a more standard way to do this?
+eng = ['A'..'Z']  -- Arbitrary letters, is there a more standard way to do this?
 
-base22 :: Int -> String  -- Need to edit this
-base22 0 = [head eng]
-base22 n = reverse (f n)
+base26 :: Int -> String  -- Need to edit this
+base26 0 = [head eng]
+base26 n = reverse (f n)
   where
    base = length eng
    f 0 = []
    f x =
-      let (q, r) = x `divMod` base
+      let (q, r) = (x - 1) `divMod` base
       in (eng !! r) : f q
 
 genVar :: Int -> Ctx -> (Var, Int)
 genVar n ctx =
-   let var = base22 n
+   let var = base26 n
    in case M.lookup var ctx of
          Just x  -> genVar (n + 1) ctx
          Nothing -> (var, n)
@@ -72,8 +75,12 @@ elaborateProg :: Int -> Ctx -> SCtx -> TCtx -> Prog -> Prog -> Either TypeError 
 -- elaborateProg i ctx sCtx vCtx prog [] = 
 --    error $ "\nProg: " ++ show prog ++ "\nContext: " ++ show ctx ++ "\nSContext: " ++ show sCtx ++ "\nVContext: " ++ show vCtx
 elaborateProg i ctx sCtx vCtx prog []                  = Right (reverse prog, ctx)
-elaborateProg i ctx sCtx vCtx prog (Assign x e : rest) =
-   elabAssign i ctx sCtx vCtx prog (Assign x e : rest) -- X could be undefined, reassigned, or redefined
+elaborateProg i ctx sCtx vCtx prog (Assign x e : rest) = do
+   let e' = getVars vCtx e 
+   ty <- infer ctx e'
+   let declare = Declare ty [] (Just e')
+   let assign  = Assign [] e'
+   elabAssign i ctx sCtx vCtx prog (Assign x e' : rest) ty declare assign  -- X could be undefined, reassigned, or redefined
 elaborateProg i ctx sCtx vCtx prog (stmt : rest)       =
    elaborateProg i ctx sCtx vCtx (getExpr vCtx stmt : prog) rest
 
@@ -81,35 +88,44 @@ elaborateProg i ctx sCtx vCtx prog (stmt : rest)       =
 -- My Muse
 -- My Mona Lisa
 -- My Sixteenth Chapel 
-elabAssign :: Int -> Ctx -> SCtx -> TCtx -> Prog -> Prog -> Either TypeError (Prog, Ctx)
-elabAssign i ctx sCtx vCtx nProg (Assign x e : rest) = do
-   let e' = getVars vCtx e
-   ty <- infer ctx e'
+elabAssign :: Int -> Ctx -> SCtx -> TCtx -> Prog -> Prog -> Type -> Stmt -> Stmt -> Either TypeError (Prog, Ctx)
+elabAssign i ctx sCtx vCtx nProg (Assign [] e : rest)     _  (Declare tyD eD e') (Assign eA e'') 
+   | null eD && null eA = elaborateProg i ctx sCtx vCtx nProg rest
+   | null eD            = elaborateProg i ctx sCtx vCtx (Assign (reverse eA) e'' : nProg) rest 
+   | null eA            = elaborateProg i ctx sCtx vCtx (Declare tyD (reverse eD) e' : nProg) rest
+   | otherwise = elaborateProg i ctx sCtx vCtx (Declare tyD (reverse eD) e' : Assign (reverse eA) e'' : nProg) rest
+elabAssign i ctx sCtx vCtx nProg (Assign (x:xs) e : rest) ty da a = do 
    case M.lookup x ctx of
          -- Assignment before declaration is fine in Python, but need to add the declaration for explicit languages
-      Nothing -> elaborateProg i (M.insert x ty ctx) sCtx vCtx (Declare ty x (Just e') : nProg) rest 
-      Just y  -> elabAssign' i ctx sCtx vCtx nProg (Assign x e : rest) e' y ty
--- elabAssign i ctx sCtx vCtx nProg (Assign x e : rest) = do 
-elabAssign _ _ _ _ _ _ = undefined
+      Nothing -> elabAssign i (M.insert x ty ctx) sCtx vCtx nProg (Assign xs e : rest) ty (addVar da x) a
+      Just y  -> elabAssign' i ctx sCtx vCtx nProg (Assign (x:xs) e : rest) ty y da a
+elabAssign i ctx sCtx vCtx nProg other _ _ _ = elaborateProg i ctx sCtx vCtx nProg other
 
-elabAssign' :: Int -> Ctx -> SCtx -> TCtx -> Prog -> Prog -> Expr -> Type -> Type -> Either TypeError (Prog, Ctx)
-elabAssign' i ctx sCtx vCtx nProg (Assign x e : rest) e' y ty
+elabAssign' :: Int -> Ctx -> SCtx -> TCtx -> Prog -> Prog -> Type -> Type -> Stmt -> Stmt -> Either TypeError (Prog, Ctx)
+elabAssign' i ctx sCtx vCtx nProg (Assign (x:xs) e : rest) ty y da a
   | x `elem` M.elems vCtx = 
       let (x', i') = genVar i ctx
-      in elaborateProg i (M.insert x' ty ctx) sCtx (M.insert x x' vCtx) (Declare ty x' (Just e') : nProg) rest
-  | y == ty               = elaborateProg i ctx sCtx (M.delete x vCtx) (Assign x e' : nProg) rest
+      in elabAssign i (M.insert x' ty ctx) sCtx (M.insert x x' vCtx) nProg (Assign xs e : rest) ty (addVar da x') a
+  | y == ty               = elabAssign i ctx sCtx (M.delete x vCtx) nProg (Assign xs e : rest) ty da (addVar a x)
   | otherwise             = 
+      -- case M.lookup x ctx of 
+      --    Nothing -> elabAssign' i (M.insert x ty ctx) sCtx vCtx nProg rest 
       case M.lookup x sCtx of
          Just vList ->
             case testSubVars ctx ty vList of
-               Just z  -> elaborateProg i ctx sCtx (M.insert x z vCtx) (Assign z e' : nProg) rest
+               Just z  -> elabAssign i ctx sCtx (M.insert x z vCtx) nProg (Assign xs e : rest) ty da (addVar a z)
                Nothing ->
                   let (x', i') = genVar i ctx
-                  in elaborateProg i' (M.insert x' ty ctx) (M.insert x (vList ++ [x']) sCtx) (M.insert x x' vCtx) (Declare ty x' (Just e') : nProg) rest
+                  in elabAssign i' (M.insert x' ty ctx) (M.insert x (vList ++ [x']) sCtx) (M.insert x x' vCtx) nProg (Assign xs e : rest) ty (addVar da x') a
          Nothing    ->
             let (x', i') = genVar i ctx
-            in elaborateProg i' (M.insert x' ty ctx) (M.insert x [x'] sCtx) (M.insert x x' vCtx) (Declare ty x' (Just e') : nProg) rest
-elabAssign' _ _ _ _ _ _ _ _ _ = undefined
+            in elabAssign i' (M.insert x' ty ctx) (M.insert x [x'] sCtx) (M.insert x x' vCtx) nProg (Assign xs e : rest) ty (addVar da x') a
+elabAssign' _ _ _ _ _ _ _ _ _ _ = undefined
+
+addVar :: Stmt -> Var -> Stmt 
+addVar (Declare ty x (Just e)) var = Declare ty (var : x) (Just e)
+addVar (Assign x e)            var = Assign (var : x) e 
+addVar rest                    _   = error ("Unexpected statement in addVar: " ++ show rest)
 
 testSubVars :: Ctx -> Type -> [Var] -> Maybe Var
 testSubVars ctx ty []     = Nothing
@@ -125,6 +141,8 @@ infer :: Ctx -> Expr -> Either TypeError Type
 infer _ (Lit (LInt n))   = Right TyInt
 infer _ (Lit (LBool b))  = Right TyBool
 infer _ (Lit (LChar c))  = Right TyChar
+infer _ (Lit (LStr [s])) = Right TyChar
+infer _ (Lit (LStr s))   = Right TyStr
 infer ctx (EVar v) =
    case M.lookup v ctx of
       Nothing -> Left (UndefinedVar v)
@@ -140,23 +158,27 @@ infer ctx (Bin op e1 e2) = do
          Less -> Right TyBool
          Greater -> Right TyBool
          LessEq -> Right TyBool
-         GreaterEq -> Right TyBool
+         GreaterEq -> Right TyBool   
+         -- Mul -> Can be num -> num -> num or string -> num -> [string?] regardless, need to allow for two different types      
          Add ->
             if e1' == TyInt
             then Right TyInt
             else
                if e1' == TyStr
                then Right TyStr
-               else error "bad"
+               else do 
+                  e2' <- infer ctx e2 
+                  Left (TypeMismatch e1' e2')
          x   -> check ctx e1 TyInt *> Right TyInt
 infer ctx (Un op e) =
    case op of
       Neg -> check ctx e TyInt *> Right TyInt
       Not -> check ctx e TyBool *> Right TyBool
-infer ctx (Array [])  = Right (TyArr Poly)
+infer ctx (Array [])  = Right (TyArr Poly)  -- Type constraints needed?
 infer ctx (Array (x:rest)) = do 
    xTy <- infer ctx x
    checkArray ctx xTy rest
+infer ctx x    = error ("The following expression is not yet implemented: " ++ show x) -- so this should show the actual expression
 
 checkArray :: Ctx -> Type -> [Expr] -> Either TypeError Type
 checkArray _   ty []       = Right (TyArr ty)

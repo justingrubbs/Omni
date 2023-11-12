@@ -1,15 +1,17 @@
+ - Python strings have '+' and '*' as valid binary operators
+   - '+' is concatenation
+   - '*' is duplication; the second argument must be an integer
+      -- https://realpython.com/python-strings/
  - Binary operations do not pretty-print parentheses
- - Python allows for `x, y, z = True` (so does Java?)
+ - Python allows for `x,y,z = True,3,"Yup"` and `x = y = z = True`
    -  Also need to allow for assignments like `x += 3`
    -  New ADT for assignments specifically?
  - Still need to do some type-checking for Java, just no reconstruction, right?
- - Won't implementing functions be far easier than anticipated? 
-   - "Implementing" functions is just parsing them and pretty-printing them 
-   - Will almost certainly cause some issues with types, but that will be the only issues I can see
- - Java AST transforming has issues with syntax like `int x,y,z = 20;`
+   - I don't think so?
 
 "Static-Type Checking:
    - Verify safety of program before execution.
 Dynamic Type Checking: 
    - Verify safety of program at execution."
+
 

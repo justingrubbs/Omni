@@ -36,9 +36,9 @@ type OmniM = StateT OmniState (InputT IO)
 description :: String
 description = "\nWelcome to Omni:\n\n\
    \  Omni is a program for transcribing programming language files.\n\
-   \  Omni currently only supports Python and Java files.\n\n\
+   \  Omni currently only supports Python and Java source code.\n\n\
    \Commands:\n\
-   \  :toPy [file name]   -- Transcribe a program to Python\n\
+   \  :toPyth [file name]     -- Transcribe a program to Python\n\
    \  :toJava [file name]     -- Transcribe a program to Java\n\
    \  :quit                   -- Exit\n"
 
@@ -67,11 +67,11 @@ omniREPL = do
                            -- `:parse javaTest.java javaTest.java ldfjkls dfofnic`
                         let (r:rest') = rest
                         in case x of
-                           ":toPy"   -> toPy   r (readFile r)         >> return True
+                           ":toPyth" -> toPy   r (readFile r)         >> return True
                            ":toJava" -> toJava r (readFile r)         >> return True
-                           ":parse"   ->
+                           ":parse"  ->
                               let (fName, ext) = stripExtension "" r
-                              in liftIO $ parseCheck (extToLang ext) r  >> return True  -- Will be removed at some point
+                              in liftIO $ parseCheck (extToLang ext) r  >> return True -- Will be removed at some point
                            _           -> lift (outputStrLn ("Error: " ++ s))       >> return True
                   when shouldLoop loop
 
