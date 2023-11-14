@@ -18,6 +18,7 @@ executable omni
     import:             warnings     
     main-is:            OmniREPL.hs
     other-modules:      Omni.Data, 
+                        Omni.Pretty,
                         Omni.Python,
                         Omni.Java,
                         Omni.Typecheck

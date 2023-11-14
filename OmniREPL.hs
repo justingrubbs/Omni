@@ -1,13 +1,14 @@
 module Main where
 
 
-import Omni.Data
-import Omni.Python                  (pyParse, checkPyParse, printPython)
-import Omni.Java                    (javaParse, checkJavaParse, printJava)
-import Omni.Typecheck               (progEdit)
-import Control.Monad.State
-import System.Console.Haskeline
-import qualified Data.Map as        M
+import            Omni.Data
+import            Omni.Pretty
+import            Omni.Python                (pyParse, checkPyParse, printPython)
+import            Omni.Java                  (javaParse, checkJavaParse, printJava)
+import            Omni.Typecheck             (progEdit)
+import            Control.Monad.State
+import            System.Console.Haskeline
+import qualified  Data.Map                   as M
 
 
 -- https://hackage.haskell.org/package/pandoc
@@ -145,11 +146,16 @@ translate txt name lang new = do
             Left err -> Left $ show err
             Right p  -> do
                p' <- typeCheck p
-               Right (prettyPrint new name' p')
+               case prettyPrint new name' p' of 
+                  Left err -> Left $ show err
+                  Right x  -> Right x
       Java -> 
          case javaParse txt of
             Left err -> Left $ show err
-            Right p  -> Right (prettyPrint new name' p)
+            Right p  -> 
+               case prettyPrint new name' p of 
+                  Left err -> Left $ show err 
+                  Right x  -> Right x
 
 typeCheck :: Prog -> Either String Prog
 typeCheck p =
@@ -157,7 +163,7 @@ typeCheck p =
       Left err -> Left $ show err
       Right x  -> Right x
 
-prettyPrint :: Lang -> String -> Prog -> String
+prettyPrint :: Lang -> String -> Prog -> Either PrettyError String
 prettyPrint Python _    = printPython
 prettyPrint Java   name = printJava name
 

@@ -1,17 +1,30 @@
-o = 'y'
 x = 3
 x = y = z = 10
-A = [True]
-B = C = D = False
-E = True
+x = [True]
+x = y = z = False
+x = True
+o = 'y'
 x = 3 / 10 - 7 + 5
-B = True
-B = 3 <= 4
-B = 3 > 4
-F = [True,B]
-G = [1,2,3]
-H = "Test!"
-I = 'Q'
+x = True
+x = 3 <= 4
+x = 3 > 4
+# x = [True,x]
+x = [1,2,3]
+x = "Test!"
+x = 'Q'
 if 2 == 2:
-	H = "Wrong"
-B = False
+	x = "Wrong"
+	x = False
+	if 2 == 2:
+		if 4 == 4:
+			x = 1000
+x = 1
+if 2 == 2:
+	x = True
+elif 3 == 2:
+	x = False
+else:
+	x = False
+
+# while x == True:
+# 	x = [[True]]

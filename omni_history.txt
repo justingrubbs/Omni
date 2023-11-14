@@ -1,45 +1,10 @@
-:toJava test.py
-:toJava test.py
-:toJava test.py
-:toJava test.py
-:toJava test.py
-:toPyth test.java
 :q
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:parse test.java
-:toPyth test.java
-:parse test.java
-:parse test.java
-:parse test.java
-:q
-:toJava test.py
-:q
-:toJava test.py
-:q
-:toJava test.py
-:q
-:toJava test.py
-:toJava test.py
-:toJava test.py
-:toJava test.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
 :q
 :toJava test.py
 :toJava test.py
@@ -49,52 +14,87 @@
 :toJava test.py
 :q
 :toJava test.py
+:q
 :toJava test.py
+:q
 :toJava test.py
 :toJava test.py
 :q
-:parse test.java
+:toJava test.py
+:toJava test.py
+:q
+:toPyth py.java
+:toJava py.py
+:q
+:toJava py.py
+:toJava py.py
+:q
+:toJava py.py
+:q
+:toJava large.py
+:toJava large.py
+:toJava large.py
+:q
+:toJava large.py
+:toJava large.py
+:toJava py.py
+:q
+:toJava py.py
+:q
+:toJava large.py
+:q
+:toJava large.py
+:toJava large.py
+:toJava large.py
+:toPyth py.java
+:q
+:toPyth py.java
+:toJava functions.py
+:toPyth test.java
+:q
+:q
+:toJava test.py
+:toJava test.py
+:q
+:toJava test.py
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
 :parse test.py
 :q
-:toPyth test.java
-:parse test.java
 :parse test.py
-:toPyth test.java
-:toPy test.java
 :toJava test.py
 :toJava test.py
-:parse test.java
+:q
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:parse test.py
+:parse test.py
+:parse test.py
 :parse test.py
 :q
 :parse test.py
-:parse test.py
-:parse test.py
 :q
 :parse test.py
+:toJava test.py
+:q
+:toJava test.py
+:parse test.py
 :q
 :parse test.py
-:parse test.java
+:toJava test.py
 :q
-:parse test.java
-:q
-:parse test.java
-:parse test.java
-:parse test.java
-:parse test.java
-:parse test.java
-:parse test.java
-:q
-:parse test.java
-:q
-:parse test.java
-:q
-:parse test.java
-:q
-:parse test.java
-:q
-:parse test.java
-:q
-:parse test.java
-:parse test.java
-:parse test.ajva
-:parse test.ajva
