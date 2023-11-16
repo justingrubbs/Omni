@@ -1,100 +1,100 @@
-:q
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:q
-:toJava test.py
-:toJava test.py
-:q
-:toJava test.py
-:q
-:toJava test.py
-:q
-:toJava test.py
-:q
-:toJava test.py
-:q
-:toJava test.py
-:toJava test.py
-:q
-:toJava test.py
-:toJava test.py
-:q
-:toPyth py.java
-:toJava py.py
-:q
-:toJava py.py
-:toJava py.py
-:q
-:toJava py.py
-:q
-:toJava large.py
-:toJava large.py
-:toJava large.py
-:q
-:toJava large.py
-:toJava large.py
-:toJava py.py
-:q
-:toJava py.py
-:q
-:toJava large.py
-:q
-:toJava large.py
-:toJava large.py
-:toJava large.py
-:toPyth py.java
-:q
-:toPyth py.java
-:toJava functions.py
 :toPyth test.java
+:toJava test.py
+:toJava quirks.py
+:toPyth omni.java
+:parse omni.java
+:parse omni.java
+:parse omni.java
+:parse omni.java
+:parse omni.java
 :q
+:parse omni.java
+:toPyth omni.java
+:toJava quirks.py
+:parse omni.py
 :q
-:toJava test.py
-:toJava test.py
+:parse omni.py
+:toPyth omni.java
 :q
-:toJava test.py
-:toJava test.py
+:toPyth omni.java
 :q
-:toJava test.py
+:toPyth omni.java
+:toJava omni.py
+:toPyth omni.java
 :q
-:toJava test.py
-:toJava test.py
+:toPyth omni.java
+:toJava omni.py
+:toJava omni.py
+:toPyth omni.java
+:toPyth omni.java
 :q
-:toJava test.py
+:toPyth omni.java
+:toPyth omni.java
+:toPyth omni.java
+:toJava quirks.py
+:toPyth omni.java
+:parse omni.py
 :q
-:toJava test.py
+:parse omni.py
+:toPyth omni.java
 :q
-:toJava test.py
+:toPyth omni.java
 :q
-:toJava test.py
-:parse test.py
+:toPyth omni.java
 :q
-:parse test.py
-:toJava test.py
-:toJava test.py
+:toPyth omni.java
+:toPyth omni.java
+:parse omni.java
+:toPyth functions.java
+:toPyth omni.java
 :q
-:toJava test.py
+:toPyth omni.java
 :q
-:toJava test.py
+:toPyth omni.java
 :q
-:toJava test.py
-:parse test.py
-:parse test.py
-:parse test.py
-:parse test.py
+:toPyth omni.java
 :q
-:parse test.py
+:toPyth functions.java
 :q
-:parse test.py
-:toJava test.py
+:toPyth functions.java
+:toPyth functions.java
 :q
-:toJava test.py
-:parse test.py
+:toPyth functions.java
 :q
-:parse test.py
-:toJava test.py
+:toPyth functions.java
+:toPyth functions.java
+:q
+:toPyth functions.java
+:q
+:toPyth functions.java
+:q
+:toPyth functions.java
+:q
+:toPyth functions.java
+:parse functions.java
+:parse functions.java
+:parse functions.java
+:parse functions.java
+:parse functions.java
+:q
+:toPyth functions.java
+:q
+:toPyth functions.java
+:q
+:toPyth functions.java
+:q
+:toPyth functions.java
+:q
+:toPyth functions.java
+:q
+:toPyth functions.java
+:toPyth functions.java
+:parse functions.java
+:q
+:parse functions.java
+:toPyth functions.java
+:toPyth functions.java
+:toPyth functions.java
+:parse functions.java
+:parse functions.java
 :q

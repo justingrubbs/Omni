@@ -49,8 +49,6 @@ convertClassDecl enumDecl                  = OtherS (prettyPrint enumDecl)
 
 convertClassBody :: S.ClassBody -> Stmt
 convertClassBody (S.ClassBody x) = Block (map convertDecl x)
-   -- This is weird because it's an array but I think I want it to just be a bunch of individual statements?
-   -- idk though will have to test a bit :):)))=+))=)):( block ?? ? ?
 
 convertDecl :: S.Decl -> Stmt
 convertDecl (S.MemberDecl x) = convertMemberDecl x
@@ -59,8 +57,16 @@ convertDecl initDecl         = OtherS (prettyPrint initDecl)
 
 -- https://www.mygreatlearning.com/blog/polymorphism-in-java/
 convertMemberDecl :: S.MemberDecl -> Stmt -- once implementing functions, change this
-convertMemberDecl (S.MethodDecl _ _ _ _ _ _ _ x) = convertMethodBody x
-convertMemberDecl rest                           = OtherS (prettyPrint rest)
+convertMemberDecl (S.MethodDecl _ _ ty (S.Ident "main") p _ _ s) = FuncDecl "main" [] TyVoid (convertMethodBody s)
+convertMemberDecl (S.MethodDecl _ _ ty v                p _ _ s) = 
+   case ty of 
+      Nothing -> FuncDecl (convertIdent v) (map convertFormalParam p) TyVoid (convertMethodBody s)
+      Just x  -> FuncDecl (convertIdent v) (map convertFormalParam p) (convertType x) (convertMethodBody s)
+convertMemberDecl rest = OtherS (prettyPrint rest)
+
+convertFormalParam :: S.FormalParam -> Expr 
+convertFormalParam (S.FormalParam _ ty _ (S.VarId v))        = Args (convertType ty) (convertIdent v)
+convertFormalParam (S.FormalParam x ty y (S.VarDeclArray v)) = convertFormalParam (S.FormalParam x ty y v)
 
 convertMethodBody :: S.MethodBody -> Stmt
 convertMethodBody (S.MethodBody (Just x)) = convertBlock x
@@ -80,13 +86,23 @@ convertBlockStmt localClass          = OtherS (prettyPrint localClass)
 
 convertStmt :: S.Stmt -> Stmt
 convertStmt (S.StmtBlock b)                       = convertBlock b
-convertStmt (S.ExpStmt (S.Assign lhs S.EqualA e)) =
+convertStmt (S.ExpStmt (S.Assign lhs aop e)) =
    case lhs of
-      S.NameLhs (S.Name x) -> Assign (map convertIdent x) (convertExpr e)
+      S.NameLhs (S.Name x) -> 
+         case aop of 
+            S.EqualA -> Assign (map convertIdent x) (convertExpr e)
+            _        -> 
+               let (x':_) = x 
+               in AugAssign (convertIdent x') (convertAop aop) (convertExpr e)
       x                    -> OtherS (prettyPrint lhs)
 convertStmt (S.IfThen e s)                        = IfThen (convertExpr e) (convertStmt s)
 convertStmt (S.IfThenElse e s1 s2)                = IfElse (convertExpr e) (convertStmt s1) (convertStmt s2)
 convertStmt (S.While e s)                         = While (convertExpr e) (convertStmt s)
+convertStmt (S.ExpStmt e)                         = ExprStmt (convertExpr e)
+convertStmt (S.Return e)                          = 
+   case e of 
+      Nothing -> Return Nothing
+      Just x  -> Return (Just (convertExpr x))
 convertStmt other                                 = OtherS (prettyPrint other)
 
 convertType :: S.Type -> Type
@@ -124,7 +140,7 @@ convertVarDecl (S.VarDecl (S.VarDeclArray x) y) ty =
          Nothing -> Declare ty [x'] Nothing
          Just z  -> Declare ty [x'] (Just (convertVarInit z))
 
-convertVarDecl2 :: S.VarDecl -> Var
+convertVarDecl2 :: S.VarDecl -> Ident
 convertVarDecl2 (S.VarDecl (S.VarId x) y)        = convertIdent x
 convertVarDecl2 (S.VarDecl (S.VarDeclArray x) y) = checkVarDecl x
 
@@ -147,11 +163,23 @@ convertExpr (S.Lit x)                     = Lit (convertLit x)
 
    -- I think S.Name has a list because of stuff like `int x,y,z = 3;`   !!!
    -- Not dealing with that right now, so just ignoring the rest of them !!!
-convertExpr (S.ExpName (S.Name (x:rest))) = EVar (convertIdent x)
+convertExpr (S.ExpName (S.Name (x:rest))) = Var (convertIdent x)
 convertExpr (S.BinOp e1 op e2)            = Bin (convertBinOp op) (convertExpr e1) (convertExpr e2)
 -- convertExpr (unary shit) 
 convertExpr (S.Assign lhs op e)           = convertExpr e
+convertExpr (S.MethodInv inv)             = convertMethodInvocation inv
 convertExpr rest                          = error $ show rest
+
+convertMethodInvocation :: S.MethodInvocation -> Expr 
+convertMethodInvocation (S.MethodCall (S.Name v) e) = 
+   let v' = map convertIdent v 
+   in if v' == ["System","out","println"]
+      then 
+         case e of 
+            [x] -> Output (convertExpr x)
+            _   -> Output (Array (map convertExpr e))
+      else Call (map convertIdent v) (map convertExpr e) 
+convertMethodInvocation rest = OtherE (prettyPrint rest)
 
 convertLit :: S.Literal -> Literal
 convertLit (S.Int i)     = LInt i
@@ -176,6 +204,12 @@ convertBinOp S.GThanE = GreaterEq
 convertBinOp S.LThanE = LessEq
 convertBinOp rest     = OtherB (prettyPrint rest)
 
+convertAop :: S.AssignOp -> AOp 
+convertAop S.AddA   = AddAssign
+convertAop S.SubA   = SubAssign 
+convertAop S.MultA  = MulAssign 
+convertAop S.DivA   = DivAssign 
+convertAop rest     = OtherA (prettyPrint rest) 
 
 -- Pretty-Printing:
 ---------------------------------------------------------------------
@@ -215,9 +249,9 @@ printStmt i (Declare ty (v:vs) e) = do
       Nothing -> Right (ty' ++ " " ++ v  ++ printDecl (Declare ty vs e) ++ printDeclAssign (Declare ty vs e))
       Just e' -> printExpr e' >>= \expr
          -> Right (ty' ++ " " ++ v  ++ printDecl (Declare ty vs e) ++ printDeclAssign (Declare ty zs e) ++ " = " ++ expr)
-printStmt i (Output e)            = do
-   expr <- printExpr e
-   Right ("System.out.println(" ++ expr ++ ")")
+-- printStmt i (Output e)            = do
+--    expr <- printExpr e
+--    Right ("System.out.println(" ++ expr ++ ")")
 printStmt i (IfThen e s)          = do
    expr <- printExpr e
    stmt <- printStmt (i+1) s
@@ -235,12 +269,16 @@ printStmt i (While e s)           = do
    stmt <- printStmt (i+1) s
    Right ("while (" ++ expr ++ ") {" ++ stmt ++ "\n" ++ tab i ++ "}")
 printStmt i (Block s)             = prettyJava i "" s
+printStmt i (ExprStmt e)          = do 
+   expr <- printExpr e
+   Right expr
 printStmt i (OtherS s)            = Left (BadStmt (OtherS s))
-printStmt _ x                     = error ("Unmatched pattern in printStmt: " ++ show x)
+printStmt _ x                     = Left (Misc ("Pattern not matched in printStmt: " ++ show x))
 
 printDecl :: Stmt -> String
 printDecl (Declare _ [] _)     = ""
 printDecl (Declare a (v:vs) e) = ',' : v ++ printDecl (Declare a vs e)
+printDecl _ = error "Unmatched pattern in printDecl"
 
 printDeclAssign :: Stmt -> String
 printDeclAssign (Declare _ [] _)     = ""
@@ -248,6 +286,7 @@ printDeclAssign (Declare a (v:vs) e) =
    case e of
       Nothing -> ""
       Just x  -> " = " ++ v ++ printDeclAssign (Declare a vs e)
+printDeclAssign _ = error "Unmatched pattern in printDeclAssign"
 
 printType :: Type -> Either PrettyError String
 printType TyInt      = Right "int"
@@ -259,11 +298,12 @@ printType (TyArr x)  = do
    Right (ty ++ "[]")
 printType Poly       = Right "Poly"
 printType (TVar t)   = Right ("Type variable: " ++ show t)
+printType TyVoid     = Right "void"
 printType (OtherT t) = Left (BadType (OtherT t))
 
 printExpr :: Expr -> Either PrettyError String
 printExpr (Lit l)       = printLit l
-printExpr (EVar v)      = Right v
+printExpr (Var v)       = Right v
 printExpr (Array ((Lit (LChar c)):cs)) = do
    str <- printString (Lit (LChar c):cs) ""
    Right (reverse str)
@@ -279,15 +319,20 @@ printExpr (Un uop x)    = do
    expr <- printExpr x
    uop  <- printUop uop
    Right (uop ++ expr)
+printExpr (Output e)    = do 
+   expr <- printExpr e 
+   Right ("System.out.println(" ++ expr ++ ")")
 printExpr (OtherE e)    = Left (BadExpr (OtherE e))
+printExpr e             = Left (Misc ("Pattern not matched in printExpr: " ++ show e))
 
 printLit :: Literal -> Either PrettyError String
 printLit (LInt n)       = Right (show n)
 printLit (LBool True)   = Right "true"
 printLit (LBool False)  = Right "false"
 printLit (LChar c)      = Right (show c)
-printLit (LStr s)       = Right (show s)
+printLit (LStr s)       = Right s
 printLit (OtherL l)     = Left (BadLit (OtherL l))
+-- printLit e              = Left (Misc ("Pattern not matched in printLit: " ++ show e))
 
 printArray :: [Expr] -> String -> Either PrettyError String
 printArray []       str = Right ""
@@ -303,7 +348,7 @@ printString []                     str = Right str
 printString ((Lit (LChar c)):rest) str = printString rest (c:str)
 printString e _ = do
    arr <- printArray e ""
-   Left (Misc ("Character expected in printString, but the following was found instead: " ++ arr))
+   Left (Misc ("Character/string expected in printString, but the following was found instead: " ++ arr))
 
 printBop :: BOp -> Either PrettyError String
 printBop Add         = Right " + "
@@ -320,9 +365,17 @@ printBop Greater     = Right " > "
 printBop LessEq      = Right " <= "
 printBop GreaterEq   = Right " >= "
 printBop (OtherB b)  = Left (BadBop (OtherB b))
+printBop e           = Left (Misc ("Pattern not matched in printBop: " ++ show e))
 
 printUop :: UOp -> Either PrettyError String
 printUop Not         = Right "!"
 printUop Neg         = Right "-"
 printUop (OtherU u)  = Left (BadUop (OtherU u))
+printUop e           = Left (Misc ("Pattern not matched in printUop: " ++ show e))
+
+printAop :: AOp -> Either PrettyError String 
+printAop AddAssign   = Right "+="
+printAop SubAssign   = Right "-="
+printAop (OtherA a)  = Left (BadAop (OtherA a))
+printAop e           = Left (Misc ("Pattern not matched in printAop: " ++ show e))
 

@@ -4,7 +4,7 @@ module Omni.Data where
 
 
 type Prog = [Stmt]
-type Var  = String
+type Ident = String
 
 
 data Lang where 
@@ -18,22 +18,23 @@ data Type where
    TyBool :: Type
    TyChar :: Type
    TyStr  :: Type
+   TyVoid :: Type
    TyArr  :: Type -> Type
-   TVar   :: Var -> Type
+   TVar   :: Ident -> Type
    OtherT :: String -> Type
    deriving (Show, Eq)
 
 -- apparently for loops are just while loops, makes sense but didn't know
 data Stmt where 
-   Assign    :: [Var] -> Expr -> Stmt 
-   AugAssign :: Var -> AOp -> Expr -> Stmt
-   Declare   :: Type -> [Var] -> Maybe Expr -> Stmt
-   Output    :: Expr -> Stmt
+   Assign    :: [Ident] -> Expr -> Stmt 
+   AugAssign :: Ident -> AOp -> Expr -> Stmt
+   Declare   :: Type -> [Ident] -> Maybe Expr -> Stmt
+   -- Output    :: Expr -> Stmt
    Block     :: Prog -> Stmt
    IfThen    :: Expr -> Stmt -> Stmt 
    IfElse    :: Expr -> Stmt -> Stmt -> Stmt 
    While     :: Expr -> Stmt -> Stmt 
-   FuncDecl  :: Expr -> [String] -> Type -> Stmt -> Stmt
+   FuncDecl  :: Ident -> [Expr] -> Type -> Stmt -> Stmt
    ExprStmt  :: Expr -> Stmt
    Return    :: Maybe Expr -> Stmt
    OtherS    :: String -> Stmt
@@ -41,11 +42,13 @@ data Stmt where
 
 data Expr where 
    Lit    :: Literal -> Expr
-   EVar   :: Var -> Expr 
+   Var    :: Ident -> Expr 
+   Args   :: Type -> Ident -> Expr
    Array  :: [Expr] -> Expr 
    Bin    :: BOp -> Expr -> Expr -> Expr
    Un     :: UOp -> Expr -> Expr
-   Call   :: Expr -> [Expr] -> Expr
+   Call   :: [Ident] -> [Expr] -> Expr
+   Output :: Expr -> Expr 
    OtherE :: String -> Expr
    deriving Show
 
@@ -80,8 +83,8 @@ data AOp = AddAssign | SubAssign | MulAssign | DivAssign | ModAssign
 
 data TypeError where 
    TypeMismatch :: Type -> Type -> TypeError
-   UndefinedVar :: Var -> TypeError
-   DuplicateVar :: Var -> TypeError
+   UndefinedVar :: Ident -> TypeError
+   DuplicateVar :: Ident -> TypeError
    deriving Show
 
 data ConversionError where 

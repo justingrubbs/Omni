@@ -7,9 +7,19 @@ x = [True,False]
 
 x = "String"
 
-x = 'char'
+x = 'c'
 
-x = True
+a = True
 
-while x == True:
-	x = [[True]]
+while a == True:
+	a = [[True]]
+	
+b = True 
+
+if (b == True):
+	b = "Squirrel"
+	
+if True:
+	c = 30
+	
+print(c)

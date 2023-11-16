@@ -6,16 +6,16 @@ public class test {
 		boolean[] A = {true};
 		boolean B,C,D = C = B = false;
 		B = true;
-		String o = "'y'";
+		String o = 'y';
 		x = 3 / 10 - 7 + 5;
 		B = true;
 		B = 3 <= 4;
 		B = 3 > 4;
 		int[] E = {1,2,3};
-		String F = "\"Test!\"";
-		F = "'Q'";
+		String F = "Test!";
+		F = 'Q';
 		if (2 == 2) {
-			F = "\"Wrong\"";
+			F = "Wrong";
 			B = false;
 			if (2 == 2) {
 				if (4 == 4) {

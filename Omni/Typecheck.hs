@@ -17,9 +17,9 @@ import            Debug.Trace
 -- Type checking:
 ---------------------------------------------------------------------
 
-type Ctx  = M.Map Var Type
-type VCtx = M.Map Var Var
-type SCtx = M.Map Var [Var] -- Context containing the original variable mapped to a map of its sub-variables
+type Ctx  = M.Map Ident Type
+type VCtx = M.Map Ident Ident
+type SCtx = M.Map Ident [Ident] -- Context containing the original variable mapped to a map of its sub-variables
 
 -- Return a progression with declarations (x : Poly) and assignments with unique variable names
 -- Will eventually do type reconstruction here as well
@@ -44,11 +44,11 @@ getExpr vCtx (Declare ty x e) =
    case e of 
       Nothing -> Declare ty x e
       Just e' -> Declare ty x (Just (getVars vCtx e'))
-getExpr vCtx (Output x)       = Output (getVars vCtx x)
 getExpr vCtx (IfThen e s)     = IfThen (getVars vCtx e) (getExpr vCtx s)
 getExpr vCtx (IfElse e s1 s2) = IfElse (getVars vCtx e) (getExpr vCtx s1) (getExpr vCtx s2)
 getExpr vCtx (While e s)      = While (getVars vCtx e) (getExpr vCtx s)
 getExpr vCtx (Block s)        = Block (map (getExpr vCtx ) s)
+getExpr vCtx (ExprStmt e)     = ExprStmt (getVars vCtx e)
 getExpr vCtx (OtherS s)       = OtherS s
 getExpr vCtx x                = error $ show x ++ " was not intended to be in prog"
 
@@ -57,10 +57,12 @@ getBlockExpr _    (Block [])     (Block y) = Block (reverse y)
 getBlockExpr vCtx (Block (x:xs)) (Block y) = getBlockExpr vCtx (Block xs) (Block (getExpr vCtx x : y))
 
 getVars :: VCtx -> Expr -> Expr
-getVars vCtx (EVar x)       = EVar (getVar vCtx x)
+getVars vCtx (Var x)        = Var (getVar vCtx x)
+getVars vCtx (Args ty v)    = Args ty v
 getVars vCtx (Bin op e1 e2) = Bin op (getVars vCtx e1) (getVars vCtx e2)
 getVars vCtx (Un op e1)     = Un op (getVars vCtx e1)
 getVars vCtx (Array x)      = Array (map (getVars vCtx) x)
+getVars vCtx (Output e)     = Output (getVars vCtx e)
 getVars _    x              = x
 
 eng :: String
@@ -76,7 +78,7 @@ base26 n = reverse (f n)
       let (q, r) = (x - 1) `divMod` base
       in (eng !! r) : f q
 
-genVar :: Int -> Ctx -> (Var, Int)
+genVar :: Int -> Ctx -> (Ident, Int)
 genVar n ctx =
    let var = base26 n
    in case M.lookup var ctx of
@@ -84,7 +86,7 @@ genVar n ctx =
          Nothing -> (var, n)
 
 -- This is necessary because Python has mutable variables and types
-getVar :: VCtx -> Var -> Var
+getVar :: VCtx -> Ident -> Ident
 getVar vCtx v =
    case M.lookup v vCtx of
       Just x  -> x
@@ -104,24 +106,23 @@ elaborateProg i ctx sCtx vCtx prog (Block s : rest)    = do
    (s', ctx', sCtx', vCtx') <- elaborateProg i ctx sCtx vCtx [] s  
    elaborateProg i ctx' sCtx' vCtx' (Block s' : prog) rest
 elaborateProg i ctx sCtx vCtx prog (IfThen e (Block s) : rest)    = do 
+   let e' = getVars vCtx e
    (s', ctx', sCtx', vCtx') <- elaborateProg i ctx sCtx vCtx [] s  
-   elaborateProg i ctx' sCtx' vCtx' (IfThen e (Block s') : prog) rest
+   elaborateProg i ctx' sCtx' vCtx' (IfThen e' (Block s') : prog) rest
 elaborateProg i ctx sCtx vCtx prog (IfElse e (Block s) o : rest)    = do 
+   let e' = getVars vCtx e
    (s, ctx, sCtx, vCtx) <- elaborateProg i ctx sCtx vCtx [] s  
    (s', ctx', sCtx', vCtx') <- elaborateProg i ctx sCtx vCtx [] [o]
    case s' of 
-      [x] -> elaborateProg i ctx' sCtx' vCtx' (IfElse e (Block s) x : prog) rest
-      _ -> error $ "oops in elaborateProg"
+      [x] -> elaborateProg i ctx' sCtx' vCtx' (IfElse e' (Block s) x : prog) rest
+      _   -> error "oops in elaborateProg"
 elaborateProg i ctx sCtx vCtx prog (While e (Block s) : rest) = do 
+   let e' = getVars vCtx e
    (s,ctx,sCtx,vCtx) <- elaborateProg i ctx sCtx vCtx [] s  
-   elaborateProg i ctx sCtx vCtx (getExpr vCtx (While e (Block s)) : prog) rest
+   elaborateProg i ctx sCtx vCtx (getExpr vCtx (While e' (Block s)) : prog) rest
 elaborateProg i ctx sCtx vCtx prog (stmt : rest)       =
    elaborateProg i ctx sCtx vCtx (getExpr vCtx stmt : prog) rest
 
--- My Flame
--- My Muse
--- My Mona Lisa
--- My Sixteenth Chapel 
 elabAssign :: Int -> Ctx -> SCtx -> VCtx -> Prog -> Prog -> Type -> Stmt -> Stmt -> Either TypeError (Prog, Ctx, SCtx, VCtx)
 elabAssign i ctx sCtx vCtx nProg (Assign [] e : rest)     _  (Declare tyD eD e') (Assign eA e'') 
    | null eD && null eA = elaborateProg i ctx sCtx vCtx nProg rest
@@ -154,12 +155,12 @@ elabAssign' i ctx sCtx vCtx nProg (Assign (x:xs) e : rest) ty y da a
             in elabAssign i' (M.insert x' ty ctx) (M.insert x [x'] sCtx) (M.insert x x' vCtx) nProg (Assign xs e : rest) ty (addVar da x') a
 elabAssign' _ _ _ _ _ _ _ _ _ _ = undefined
 
-addVar :: Stmt -> Var -> Stmt 
+addVar :: Stmt -> Ident -> Stmt 
 addVar (Declare ty x (Just e)) var = Declare ty (var : x) (Just e)
 addVar (Assign x e)            var = Assign (var : x) e 
 addVar rest                    _   = error ("Unexpected statement in addVar: " ++ show rest)
 
-testSubVars :: Ctx -> Type -> [Var] -> Maybe Var
+testSubVars :: Ctx -> Type -> [Ident] -> Maybe Ident
 testSubVars ctx ty []     = Nothing
 testSubVars ctx ty (x:xs) =
    case M.lookup x ctx of
@@ -179,7 +180,7 @@ infer _ (Lit (LBool b))  = Right TyBool
 infer _ (Lit (LChar c))  = Right TyChar
 infer _ (Lit (LStr [s])) = Right TyChar
 infer _ (Lit (LStr s))   = Right TyStr
-infer ctx (EVar v) =
+infer ctx (Var v) =
    case M.lookup v ctx of
       Nothing -> Left (UndefinedVar v)
       Just x  -> Right x
