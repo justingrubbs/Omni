@@ -19,8 +19,10 @@ executable omni
     main-is:            OmniREPL.hs
     other-modules:      Omni.Data, 
                         Omni.Pretty,
-                        Omni.Python,
-                        Omni.Java,
+                        Omni.Python.Syntax,
+                        Omni.Python.Print,
+                        Omni.Java.Syntax,
+                        Omni.Java.Print,
                         Omni.Typecheck
     -- other-extensions:   
     build-depends:      base >= 4.14.1.0 && < 4.19,

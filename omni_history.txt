@@ -1,3 +1,18 @@
+:q
+:toPyth omni.java
+:toPyth py.java
+:toJava py.py
+:toJava test.py
+:toJava quirks.py
+:q
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.java
+:toJava test.py
+:toJava test.py
+:q
+:q
+:toPyth omni.java
 :toPyth test.java
 :toJava test.py
 :toJava quirks.py
@@ -82,19 +97,4 @@
 :toPyth functions.java
 :q
 :toPyth functions.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:toPyth functions.java
-:parse functions.java
-:q
-:parse functions.java
-:toPyth functions.java
-:toPyth functions.java
-:toPyth functions.java
-:parse functions.java
-:parse functions.java
 :q

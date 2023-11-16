@@ -13,15 +13,17 @@ data Lang where
    deriving Show
 
 data Type where 
-   Poly   :: Type
-   TyInt  :: Type
-   TyBool :: Type
-   TyChar :: Type
-   TyStr  :: Type
-   TyVoid :: Type
-   TyArr  :: Type -> Type
-   TVar   :: Ident -> Type
-   OtherT :: String -> Type
+   Poly     :: Type
+   TyInt    :: Type
+   TyFloat  :: Type
+   TyDouble :: Type
+   TyBool   :: Type
+   TyChar   :: Type
+   TyStr    :: Type
+   TyVoid   :: Type
+   TyArr    :: Type -> Type
+   TVar     :: Ident -> Type
+   OtherT   :: String -> Type
    deriving (Show, Eq)
 
 -- apparently for loops are just while loops, makes sense but didn't know
@@ -34,6 +36,7 @@ data Stmt where
    IfThen    :: Expr -> Stmt -> Stmt 
    IfElse    :: Expr -> Stmt -> Stmt -> Stmt 
    While     :: Expr -> Stmt -> Stmt 
+   -- For       :: Stmt
    FuncDecl  :: Ident -> [Expr] -> Type -> Stmt -> Stmt
    ExprStmt  :: Expr -> Stmt
    Return    :: Maybe Expr -> Stmt
@@ -53,10 +56,12 @@ data Expr where
    deriving Show
 
 data Literal where 
-   LInt   :: Integer -> Literal 
-   LBool  :: Bool -> Literal 
-   LChar  :: Char -> Literal 
-   LStr   :: String -> Literal 
+   Int    :: Integer -> Literal 
+   Float  :: Float -> Literal 
+   Double :: Double -> Literal
+   Bool   :: Bool -> Literal 
+   Char   :: Char -> Literal 
+   Str    :: String -> Literal 
    OtherL :: String -> Literal
    deriving Show
 

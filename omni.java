@@ -1,6 +1,6 @@
 public class omni {
    public static void main(String[] args) {
-      System.out.println(parent());
+      System.out.println(coolMath());
    }
 
    public static int add(int x, int y) {
@@ -11,7 +11,7 @@ public class omni {
       return x * y;
    }
 
-   public static int parent() {
+   public static int coolMath() {
       int a = 0;
       int x = 200;
       int y = 10;

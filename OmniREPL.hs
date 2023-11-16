@@ -1,17 +1,19 @@
+
+
 module Main where
 
 
 import            Omni.Data
 import            Omni.Pretty
-import            Omni.Python                (pyParse, checkPyParse, printPython)
-import            Omni.Java                  (javaParse, checkJavaParse, printJava)
+import            Omni.Python.Syntax         (pyParse, checkPyParse)
+import            Omni.Python.Print          (printPython) 
+import            Omni.Java.Syntax           (javaParse, checkJavaParse)
+import            Omni.Java.Print            (printJava)
 import            Omni.Typecheck             (progEdit)
 import            Control.Monad.State
 import            System.Console.Haskeline
 import qualified  Data.Map                   as M
 
-
--- https://hackage.haskell.org/package/pandoc
 
 -- Python:
     -- https://docs.python.org/3/reference/grammar.html
@@ -22,9 +24,7 @@ import qualified  Data.Map                   as M
     -- https://hackage.haskell.org/package/megaparsec
     -- https://hackage.haskell.org/package/megaparsec-9.5.0#megaparsec-vs-parsec
     -- https://github.com/mrkkrp/megaparsec-site/blob/master/tutorials/parsing-simple-imperative-language.md
-
     -- https://github.com/disco-lang/disco/blob/master/src/Disco/Parser.hs
-
 
 
 data OmniState = QS

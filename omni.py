@@ -1,5 +1,5 @@
 def main():
-	print(parent())
+	print(coolMath())
 
 def add(x,y):
 	return x + y
@@ -7,7 +7,7 @@ def add(x,y):
 def mul(x,y):
 	return x * y
 
-def parent():
+def coolMath():
 	a = 0
 	x = 200
 	y = 10

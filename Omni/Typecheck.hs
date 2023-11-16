@@ -175,11 +175,11 @@ testSubVars ctx ty (x:xs) =
 ---------------------------------------------------------------------
 
 infer :: Ctx -> Expr -> Either TypeError Type
-infer _ (Lit (LInt n))   = Right TyInt
-infer _ (Lit (LBool b))  = Right TyBool
-infer _ (Lit (LChar c))  = Right TyChar
-infer _ (Lit (LStr [s])) = Right TyChar
-infer _ (Lit (LStr s))   = Right TyStr
+infer _ (Lit (Int n))   = Right TyInt
+infer _ (Lit (Bool b))  = Right TyBool
+infer _ (Lit (Char c))  = Right TyChar
+-- infer _ (Lit (Str [s])) = Right TyChar
+infer _ (Lit (Str s))   = Right TyStr
 infer ctx (Var v) =
    case M.lookup v ctx of
       Nothing -> Left (UndefinedVar v)
