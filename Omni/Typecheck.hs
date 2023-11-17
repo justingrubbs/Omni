@@ -1,5 +1,4 @@
--- {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
--- {-# HLINT ignore "Replace case with fromMaybe" #-}
+
 
 module Omni.Typecheck
    (
@@ -7,21 +6,29 @@ module Omni.Typecheck
    )
    where
 
+
 import            Omni.Data
 import qualified  Data.Map as M
 import            Debug.Trace
 
 
 -- https://en.wikipedia.org/wiki/Comparison_of_programming_languages_by_type_system
+-- https://hackage.haskell.org/package/transformers-0.6.1.1/docs/Control-Monad-Trans-Reader.html
+-- https://hackage.haskell.org/package/transformers-0.6.1.1/docs/Control-Monad-Trans-State.html
+
+
+-- ReaderT Ctx (Either Err) Rest
+-- ctx <- ask 
+-- local (function to modify context) (computation to run locally)
+
 
 -- Type checking:
 ---------------------------------------------------------------------
-
 type Ctx  = M.Map Ident Type
 type VCtx = M.Map Ident Ident
 type SCtx = M.Map Ident [Ident] -- Context containing the original variable mapped to a map of its sub-variables
 
--- Return a progression with declarations (x : Poly) and assignments with unique variable names
+
 -- Will eventually do type reconstruction here as well
 progEdit :: Prog -> Either TypeError Prog
 progEdit p = do
@@ -33,10 +40,8 @@ progEdit p = do
 
 -- Variable Generation and Maintenance:
 ---------------------------------------------------------------------
-
 -- Not quite sure how to work functions into this
    -- Work through the statements and if a variable is encountered that is NOT one of the parameters, update it?
-
 -- Create function that will check every statement for variables and update them according to tVar
 getExpr :: VCtx -> Stmt -> Stmt
 getExpr vCtx (Assign x e)     = Assign x (getVars vCtx e)
@@ -46,10 +51,11 @@ getExpr vCtx (Declare ty x e) =
       Just e' -> Declare ty x (Just (getVars vCtx e'))
 getExpr vCtx (IfThen e s)     = IfThen (getVars vCtx e) (getExpr vCtx s)
 getExpr vCtx (IfElse e s1 s2) = IfElse (getVars vCtx e) (getExpr vCtx s1) (getExpr vCtx s2)
-getExpr vCtx (While e s)      = While (getVars vCtx e) (getExpr vCtx s)
+getExpr vCtx (While e s)      = While e (getExpr vCtx s)
 getExpr vCtx (Block s)        = Block (map (getExpr vCtx ) s)
 getExpr vCtx (ExprStmt e)     = ExprStmt (getVars vCtx e)
 getExpr vCtx (OtherS s)       = OtherS s
+getExpr vCtx (FuncDecl v e ty s) = FuncDecl v e ty s
 getExpr vCtx x                = error $ show x ++ " was not intended to be in prog"
 
 getBlockExpr :: VCtx -> Stmt -> Stmt -> Stmt 
@@ -58,7 +64,6 @@ getBlockExpr vCtx (Block (x:xs)) (Block y) = getBlockExpr vCtx (Block xs) (Block
 
 getVars :: VCtx -> Expr -> Expr
 getVars vCtx (Var x)        = Var (getVar vCtx x)
-getVars vCtx (Args ty v)    = Args ty v
 getVars vCtx (Bin op e1 e2) = Bin op (getVars vCtx e1) (getVars vCtx e2)
 getVars vCtx (Un op e1)     = Un op (getVars vCtx e1)
 getVars vCtx (Array x)      = Array (map (getVars vCtx) x)
@@ -173,18 +178,17 @@ testSubVars ctx ty (x:xs) =
 
 -- Type inference:
 ---------------------------------------------------------------------
-
 infer :: Ctx -> Expr -> Either TypeError Type
-infer _ (Lit (Int n))   = Right TyInt
-infer _ (Lit (Bool b))  = Right TyBool
-infer _ (Lit (Char c))  = Right TyChar
+infer _ (Lit (Int n))      = Right TyInt
+infer _ (Lit (Bool b))     = Right TyBool
+infer _ (Lit (Char c))     = Right TyChar
 -- infer _ (Lit (Str [s])) = Right TyChar
-infer _ (Lit (Str s))   = Right TyStr
-infer ctx (Var v) =
+infer _ (Lit (Str s))      = Right TyStr
+infer ctx (Var v)          =
    case M.lookup v ctx of
       Nothing -> Left (UndefinedVar v)
       Just x  -> Right x
-infer ctx (Bin op e1 e2) = do
+infer ctx (Bin op e1 e2)   = do
    e1' <- infer ctx e1
    check ctx e2 e1' *>
       case op of
@@ -207,19 +211,19 @@ infer ctx (Bin op e1 e2) = do
                   e2' <- infer ctx e2 
                   Left (TypeMismatch e1' e2')
          x   -> check ctx e1 TyInt *> Right TyInt
-infer ctx (Un op e) =
+infer ctx (Un op e)        =
    case op of
       Neg -> check ctx e TyInt *> Right TyInt
       Not -> check ctx e TyBool *> Right TyBool
 infer ctx (Array [])       = Right (TyArr Poly)  -- Type constraints needed?
 infer ctx (Array (x:rest)) = do 
    xTy <- infer ctx x
-   checkArray ctx xTy rest
-infer ctx x    = error ("The following expression is not yet implemented: " ++ show x) -- so this should show the actual expression
+   inferArray ctx xTy rest
+infer ctx x                = error ("The following expression is not yet implemented: " ++ show x) -- so this should show the actual expression
 
-checkArray :: Ctx -> Type -> [Expr] -> Either TypeError Type
-checkArray _   ty []       = Right (TyArr ty)
-checkArray ctx ty (x:rest) = check ctx x ty *> checkArray ctx ty rest
+inferArray :: Ctx -> Type -> [Expr] -> Either TypeError Type
+inferArray _   ty []       = Right (TyArr ty)
+inferArray ctx ty (x:rest) = check ctx x ty *> inferArray ctx ty rest
 
 check :: Ctx -> Expr -> Type -> Either TypeError ()
 check ctx e ty = do

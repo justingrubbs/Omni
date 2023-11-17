@@ -4,11 +4,10 @@ module Main where
 
 
 import            Omni.Data
-import            Omni.Pretty
 import            Omni.Python.Syntax         (pyParse, checkPyParse)
-import            Omni.Python.Print          (printPython) 
+import            Omni.Python.Pretty         (printPython) 
 import            Omni.Java.Syntax           (javaParse, checkJavaParse)
-import            Omni.Java.Print            (printJava)
+import            Omni.Java.Pretty           (printJava)
 import            Omni.Typecheck             (progEdit)
 import            Control.Monad.State
 import            System.Console.Haskeline
@@ -99,7 +98,7 @@ extToLang :: String -> Lang
 extToLang x =
    case x of
       "py"   -> Python
-      "java"  -> Java
+      "java" -> Java
       y      -> error ("Extension " ++ y ++ " is not supported.")
 
 toPy :: String -> IO String -> OmniM ()

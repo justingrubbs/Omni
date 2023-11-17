@@ -64,9 +64,9 @@ convertStmt (PC.Return e _)
 convertStmt rest 
    = OtherS (show rest)
 
-convertParam :: PC.ParameterSpan -> Expr
-convertParam (PC.Param v _ _ _)  = Args Poly (convertIdent v)
-convertParam rest                = OtherE (T.prettyText rest)
+convertParam :: PC.ParameterSpan -> Args
+convertParam (PC.Param v _ _ _)  = Args Poly (convertIdent v) -- Poly just a placeholder for now 
+convertParam rest                = error ("Unmatched pattern in convertParam: " ++ show rest)
 
 
 -- Expressions:
