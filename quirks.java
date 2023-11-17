@@ -8,13 +8,15 @@ public class quirks {
 		String B = "String";
 		B = 'c';
 		boolean a = true;
-		while (C == true) {
+		while (a == true) {
 			boolean[][] C = {{true}};
 		}
-		boolean b = true;
-		if (b == true) {
-			String D = "Squirrel";
+		System.out.println(C);
+		a = true;
+		if (a == true) {
+			C = {{true,false}};
 		}
+		System.out.println(C);
 		if (true) {
 			int c = 30;
 		}

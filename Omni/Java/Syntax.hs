@@ -75,7 +75,7 @@ convertMemberDecl (S.MethodDecl _ _ ty v                p _ _ s)
 convertMemberDecl rest 
    = OtherS (prettyPrint rest)
 
-convertFormalParam :: S.FormalParam -> Expr 
+convertFormalParam :: S.FormalParam -> Args 
 convertFormalParam (S.FormalParam _ ty _ (S.VarId v))        = Args (convertType ty) (convertIdent v)
 convertFormalParam (S.FormalParam x ty y (S.VarDeclArray v)) = convertFormalParam (S.FormalParam x ty y v)
 

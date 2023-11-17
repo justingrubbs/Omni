@@ -1,4 +1,72 @@
 :q
+:toJava test.py
+:toJava test.cpp
+:toJava test.cpp
+:q
+:toJava example.py
+:toJava example.py
+:q
+:toJava example.py
+:q
+:toJava example.py
+:q
+:toJava example.py
+:q
+:toJava example.py
+:toJava example.py
+:toJava example.py
+:q
+:toJava example.py
+:toJava example.py
+:q
+:toJava example.py
+:q
+:toJava example.py
+:toJava example.py
+:toPyth example.java
+:toJava example.py
+:toPyth example.java
+:toJava example.py
+:toPyth example.java
+:toJava example.py
+:toJava example.py
+:q
+:q
+:q
+:q
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:parse quirks.py
+:toJava example.cpp
+:toJava example.py
+:toPyth example.java
+:toJava example.py
+:toJava example.py
+:toPyth example.java
+:q
+:toJava quirks.py
+:toPyth example.java
+:toPyth example.java
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:toJava quirks.py
+:q
+:toJava quirks.py
+:q
+:toJava example.py
+:toJava example.py
+:toPyth example.java
+:toJava example.py
+:toJava example.py
+:toPyth large.java
+:toJava large.py
+:q
 :toPyth omni.java
 :toPyth py.java
 :toJava py.py
@@ -30,71 +98,3 @@
 :q
 :parse omni.py
 :toPyth omni.java
-:q
-:toPyth omni.java
-:q
-:toPyth omni.java
-:toJava omni.py
-:toPyth omni.java
-:q
-:toPyth omni.java
-:toJava omni.py
-:toJava omni.py
-:toPyth omni.java
-:toPyth omni.java
-:q
-:toPyth omni.java
-:toPyth omni.java
-:toPyth omni.java
-:toJava quirks.py
-:toPyth omni.java
-:parse omni.py
-:q
-:parse omni.py
-:toPyth omni.java
-:q
-:toPyth omni.java
-:q
-:toPyth omni.java
-:q
-:toPyth omni.java
-:toPyth omni.java
-:parse omni.java
-:toPyth functions.java
-:toPyth omni.java
-:q
-:toPyth omni.java
-:q
-:toPyth omni.java
-:q
-:toPyth omni.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:toPyth functions.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:toPyth functions.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:parse functions.java
-:parse functions.java
-:parse functions.java
-:parse functions.java
-:parse functions.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:q
-:toPyth functions.java
-:q

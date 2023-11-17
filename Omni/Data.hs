@@ -26,27 +26,32 @@ data Type where
    OtherT   :: String -> Type
    deriving (Show, Eq)
 
+-- After talking shit about the way the Java parser works, I would like to change mine to be more like it
+   -- Specifically, make a new type Assign that has two? one? constructor so that elabAssign does not have to have a wildcard
+
 -- apparently for loops are just while loops, makes sense but didn't know
 data Stmt where 
    Assign    :: [Ident] -> Expr -> Stmt 
    AugAssign :: Ident -> AOp -> Expr -> Stmt
    Declare   :: Type -> [Ident] -> Maybe Expr -> Stmt
-   -- Output    :: Expr -> Stmt
    Block     :: Prog -> Stmt
    IfThen    :: Expr -> Stmt -> Stmt 
    IfElse    :: Expr -> Stmt -> Stmt -> Stmt 
    While     :: Expr -> Stmt -> Stmt 
    -- For       :: Stmt
-   FuncDecl  :: Ident -> [Expr] -> Type -> Stmt -> Stmt
+   FuncDecl  :: Ident -> [Args] -> Type -> Stmt -> Stmt
    ExprStmt  :: Expr -> Stmt
    Return    :: Maybe Expr -> Stmt
    OtherS    :: String -> Stmt
    deriving Show 
 
+data Args where 
+   Args :: Type -> Ident -> Args 
+   deriving Show
+
 data Expr where 
    Lit    :: Literal -> Expr
    Var    :: Ident -> Expr 
-   Args   :: Type -> Ident -> Expr
    Array  :: [Expr] -> Expr 
    Bin    :: BOp -> Expr -> Expr -> Expr
    Un     :: UOp -> Expr -> Expr
@@ -94,5 +99,16 @@ data TypeError where
 
 data ConversionError where 
    BadConvert :: String -> ConversionError 
+   deriving Show
+
+data PrettyError where 
+   BadStmt :: Stmt -> PrettyError 
+   BadExpr :: Expr -> PrettyError 
+   BadType :: Type -> PrettyError 
+   BadLit  :: Literal -> PrettyError 
+   BadBop  :: BOp -> PrettyError 
+   BadUop  :: UOp -> PrettyError 
+   BadAop  :: AOp -> PrettyError 
+   Misc    :: String -> PrettyError
    deriving Show
 

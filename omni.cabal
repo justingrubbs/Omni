@@ -18,11 +18,10 @@ executable omni
     import:             warnings     
     main-is:            OmniREPL.hs
     other-modules:      Omni.Data, 
-                        Omni.Pretty,
                         Omni.Python.Syntax,
-                        Omni.Python.Print,
+                        Omni.Python.Pretty,
                         Omni.Java.Syntax,
-                        Omni.Java.Print,
+                        Omni.Java.Pretty,
                         Omni.Typecheck
     -- other-extensions:   
     build-depends:      base >= 4.14.1.0 && < 4.19,

@@ -8,6 +8,7 @@ x = 3 / 10 - 7 + 5
 x = True
 x = 3 <= 4
 x = 3 > 4
+# x = [True,x]
 x = [1,2,3]
 x = "Test!"
 x = 'Q'
@@ -24,3 +25,6 @@ elif 3 == 2:
 	x = False
 else:
 	x = False
+
+# while x == True:
+# 	x = [[True]]
