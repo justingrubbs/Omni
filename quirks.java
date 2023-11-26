@@ -11,15 +11,18 @@ public class quirks {
 		while (a == true) {
 			boolean[][] C = {{true}};
 		}
-		System.out.println(C);
+		System.out.println(a);
 		a = true;
 		if (a == true) {
-			C = {{true,false}};
+			boolean[][] D = {{true,false}};
 		}
-		System.out.println(C);
+		System.out.println(a);
 		if (true) {
 			int c = 30;
 		}
 		System.out.println(c);
+		if (1) {
+			System.out.println("Python has values - `if 1:` == `if True:`"); // Ghost `x`???
+		}
 	}
 }

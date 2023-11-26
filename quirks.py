@@ -27,5 +27,8 @@ print(a)
 	
 if True:
 	c = 30
-	
+
 print(c)
+
+if 1:
+	print("Python has values - `if 1:` == `if True:`")

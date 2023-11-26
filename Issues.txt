@@ -9,6 +9,12 @@
  - Still need to do some type-checking for Java, just no reconstruction, right?
    - I don't think so?
 
+ - The entirety of quirks.py 
+ - Inference required on statements as well 
+ - Constraint-solving and unification need to be implemented in some capacity 
+ - Lot of clean-up necessary before it's a decent project
+ - Modularize the REPL translate function better
+
 "Static-Type Checking:
    - Verify safety of program before execution.
 Dynamic Type Checking: 

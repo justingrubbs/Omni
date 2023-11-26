@@ -8,8 +8,7 @@ import            Omni.Python.Syntax         (pyParse, checkPyParse)
 import            Omni.Python.Pretty         (printPython) 
 import            Omni.Java.Syntax           (javaParse, checkJavaParse)
 import            Omni.Java.Pretty           (printJava)
-import            Omni.Typestuff             (progEdit)
-import            Omni.Typecheck.Monadic     (checkProg, Contexts)
+import            Omni.Typecheck.Inference   (checkProg, Contexts)
 import            System.Console.Haskeline
 import qualified  Data.Map                   as M
 import            Control.Monad.State 
@@ -150,7 +149,6 @@ translate txt name lang new = do
          case pyParse txt name of
             Left err -> Left $ ParseError $ Generic err
             Right p  -> do
-               -- Change `checkProg` to `progEdit` to use old type checker
                case checkProg p of           
                   Left err -> Left $ TypeError err
                   Right p' -> 
