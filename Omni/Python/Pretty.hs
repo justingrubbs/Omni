@@ -80,7 +80,7 @@ printDecl (Declare a (v:vs) e) = " = " ++ v ++ printDecl (Declare a vs e)
 printDecl _                    = error "Unmatched pattern in printDecl"
 
 printArg :: Args -> String  
-printArg (Args _ ident) = show ident
+printArg (Args _ ident) = ident
 
 printArgs :: [Args] -> String -> String
 printArgs []       str = ""

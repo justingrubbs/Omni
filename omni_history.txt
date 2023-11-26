@@ -1,100 +1,100 @@
 :q
+:
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:toJava monad.py
+:q
+:toJava monad.py
+:toJava monad.py
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:toJava monad.py
+:q
+:toJava monad.py
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:parse example.java
+:parse example.py
+:toJava monad.py
+:q
+:toJava monad.py
+:q
+:parse monad.py
+:toJava monad.py
+:q
+:toJava monad.py
+:q
 :toJava test.py
-:toJava test.cpp
-:toJava test.cpp
 :q
-:toJava example.py
-:toJava example.py
-:q
-:toJava example.py
-:q
-:toJava example.py
-:q
-:toJava example.py
-:q
-:toJava example.py
-:toJava example.py
-:toJava example.py
-:q
-:toJava example.py
-:toJava example.py
-:q
-:toJava example.py
-:q
-:toJava example.py
-:toJava example.py
-:toPyth example.java
-:toJava example.py
-:toPyth example.java
-:toJava example.py
-:toPyth example.java
-:toJava example.py
-:toJava example.py
-:q
-:q
-:q
-:q
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:parse quirks.py
-:toJava example.cpp
-:toJava example.py
-:toPyth example.java
-:toJava example.py
-:toJava example.py
-:toPyth example.java
-:q
-:toJava quirks.py
-:toPyth example.java
-:toPyth example.java
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.py
-:q
-:toJava quirks.py
-:q
-:toJava example.py
-:toJava example.py
-:toPyth example.java
-:toJava example.py
-:toJava example.py
-:toPyth large.java
-:toJava large.py
-:q
-:toPyth omni.java
-:toPyth py.java
-:toJava py.py
 :toJava test.py
-:toJava quirks.py
 :q
-:toJava quirks.py
-:toJava quirks.py
-:toJava quirks.java
+:toJava test.py
+:q
+:toJava test.py
 :toJava test.py
 :toJava test.py
 :q
-:q
-:toPyth omni.java
-:toPyth test.java
 :toJava test.py
-:toJava quirks.py
-:toPyth omni.java
-:parse omni.java
-:parse omni.java
-:parse omni.java
-:parse omni.java
-:parse omni.java
 :q
-:parse omni.java
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toPyth omni.java
+:toPyth omni.java
+:toPyth omni.py
+:toJava omni.py
 :toPyth omni.java
 :toJava quirks.py
-:parse omni.py
-:q
-:parse omni.py
+:toJava test.py
 :toPyth omni.java
+:q
+:toPyth omni.java
+:q
+:toPyth omni.java
+:toJava test.py
+:q
+:toJava quirks.py
+:q
+:toJava quirks.py
+:toJava monad.py
+:q
+:toJava monad.py
+:toJava monad.py
+:parse monad.py
+:q
+:toJava nosctx.py
+:toJava nosctx.py
+:q
+:toJava sctx.py
+:q

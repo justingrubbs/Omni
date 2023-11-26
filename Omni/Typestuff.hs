@@ -1,6 +1,6 @@
 
 
-module Omni.Typecheck
+module Omni.Typestuff
    (
       progEdit
    )
@@ -17,7 +17,7 @@ import            Debug.Trace
 -- https://hackage.haskell.org/package/transformers-0.6.1.1/docs/Control-Monad-Trans-State.html
 
 
--- ReaderT Ctx (Either Err) Rest
+-- ReaderT Ctx (Either TypeError) Rest
 -- ctx <- ask 
 -- local (function to modify context) (computation to run locally)
 
@@ -133,7 +133,7 @@ elabAssign i ctx sCtx vCtx nProg (Assign [] e : rest)     _  (Declare tyD eD e')
    | null eD && null eA = elaborateProg i ctx sCtx vCtx nProg rest
    | null eD            = elaborateProg i ctx sCtx vCtx (Assign (reverse eA) e'' : nProg) rest 
    | null eA            = elaborateProg i ctx sCtx vCtx (Declare tyD (reverse eD) e' : nProg) rest
-   | otherwise = elaborateProg i ctx sCtx vCtx (Declare tyD (reverse eD) e' : Assign (reverse eA) e'' : nProg) rest
+   | otherwise          = elaborateProg i ctx sCtx vCtx (Declare tyD (reverse eD) e' : Assign (reverse eA) e'' : nProg) rest
 elabAssign i ctx sCtx vCtx nProg (Assign (x:xs) e : rest) ty da a = do 
    case M.lookup x ctx of
          -- Assignment before declaration is fine in Python, but need to add the declaration for explicit languages
@@ -165,7 +165,8 @@ addVar (Declare ty x (Just e)) var = Declare ty (var : x) (Just e)
 addVar (Assign x e)            var = Assign (var : x) e 
 addVar rest                    _   = error ("Unexpected statement in addVar: " ++ show rest)
 
-testSubVars :: Ctx -> Type -> [Ident] -> Maybe Ident
+-- testSubVars :: Ctx -> Type -> [Ident] -> Maybe Ident
+testSubVars :: (Ord a, Eq t) => M.Map a t -> t -> [a] -> Maybe a
 testSubVars ctx ty []     = Nothing
 testSubVars ctx ty (x:xs) =
    case M.lookup x ctx of

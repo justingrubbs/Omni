@@ -22,7 +22,9 @@ executable omni
                         Omni.Python.Pretty,
                         Omni.Java.Syntax,
                         Omni.Java.Pretty,
-                        Omni.Typecheck
+                        Omni.Typestuff,
+                        Omni.Typecheck.Monadic,
+                        Omni.Typecheck.Constraints
     -- other-extensions:   
     build-depends:      base >= 4.14.1.0 && < 4.19,
                         directory,

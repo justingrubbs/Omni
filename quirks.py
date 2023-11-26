@@ -3,7 +3,7 @@ x = 2 * (3 - 2)
 x = y = z = 10
 
 x = [True]
-x = [True,False]
+x = [False]
 # x.append(False)
 
 x = "String"

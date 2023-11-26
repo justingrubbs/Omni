@@ -4,7 +4,7 @@ public class quirks {
 		x = 10;
 		int y,z = y = 10;
 		boolean[] A = {true};
-		A = {true,false};
+		A = {false};
 		String B = "String";
 		B = 'c';
 		boolean a = true;

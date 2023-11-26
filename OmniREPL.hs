@@ -8,10 +8,15 @@ import            Omni.Python.Syntax         (pyParse, checkPyParse)
 import            Omni.Python.Pretty         (printPython) 
 import            Omni.Java.Syntax           (javaParse, checkJavaParse)
 import            Omni.Java.Pretty           (printJava)
-import            Omni.Typecheck             (progEdit)
-import            Control.Monad.State
+import            Omni.Typestuff             (progEdit)
+import            Omni.Typecheck.Monadic     (checkProg, Contexts)
 import            System.Console.Haskeline
 import qualified  Data.Map                   as M
+import            Control.Monad.State 
+import            Control.Monad.Reader 
+import            Control.Monad.Writer 
+import            Control.Monad.Except
+import            Control.Monad.Identity
 
 
 -- Python:
@@ -109,7 +114,7 @@ toPy s txt =
       else do
          txt' <- liftIO txt
          case translate txt' s (extToLang ext) Python of
-            Left  err -> lift $ outputStrLn err
+            Left  err -> error $ show err
             Right f   -> do
                modify (\qs -> qs { omniDoc = Just txt
                                  , omniSrc = Just s
@@ -126,7 +131,7 @@ toJava s txt =
          txt' <- liftIO txt
          case translate txt' s (extToLang ext) Java of
          -- case translate txt' (extToLang ext) Java of
-            Left  err -> lift $ outputStrLn err
+            Left  err -> error $ show err
             Right f   -> do
                modify (\qs -> qs { omniDoc = Just txt
                                  , omniSrc = Just s
@@ -135,32 +140,30 @@ toJava s txt =
                javaSave fName f
 
 -- The lefts of translate and typecheck should be specific errors but whatever for now -- probably elsewhere as well
--- STILL NEED TO DO SOME TYPE CHECKING FOR JAVA? JUST FOR CONSISTENCY? UNDEFINED VARS AND SUCH
-translate :: String -> String -> Lang -> Lang -> Either String String
+-- STILL NEED TO DO SOME TYPE CHECKING FOR JAVA? JUST FOR CONSISTENCY? UNDEFINED VARS AND SUCH  -- no
+translate :: String -> String -> Lang -> Lang -> Either Error String
 translate txt name lang new = do
    let (name',_) = stripExtension "" name
    case lang of 
+      -- This can all be generalized much better
       Python -> 
          case pyParse txt name of
-            Left err -> Left $ show err
+            Left err -> Left $ ParseError $ Generic err
             Right p  -> do
-               p' <- typeCheck p
-               case prettyPrint new name' p' of 
-                  Left err -> Left $ show err
-                  Right x  -> Right x
+               -- Change `checkProg` to `progEdit` to use old type checker
+               case checkProg p of           
+                  Left err -> Left $ TypeError err
+                  Right p' -> 
+                     case prettyPrint new name' p' of 
+                        Left err -> Left $ PrettyError err
+                        Right x  -> Right x
       Java -> 
          case javaParse txt of
-            Left err -> Left $ show err
+            Left err -> Left $ ParseError $ Generic err
             Right p  -> 
                case prettyPrint new name' p of 
-                  Left err -> Left $ show err 
+                  Left err -> Left $ PrettyError err
                   Right x  -> Right x
-
-typeCheck :: Prog -> Either String Prog
-typeCheck p =
-   case progEdit p of
-      Left err -> Left $ show err
-      Right x  -> Right x
 
 prettyPrint :: Lang -> String -> Prog -> Either PrettyError String
 prettyPrint Python _    = printPython

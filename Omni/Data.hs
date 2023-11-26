@@ -91,14 +91,25 @@ data AOp = AddAssign | SubAssign | MulAssign | DivAssign | ModAssign
    | OtherA String
    deriving (Show, Eq)
 
+data Error where 
+   ParseError :: ParseError -> Error
+   TypeError :: TypeError -> Error 
+   ConvertError :: ConvertError -> Error 
+   PrettyError :: PrettyError -> Error 
+   deriving Show 
+
+data ParseError where 
+   Generic :: String -> ParseError 
+   deriving Show
+
 data TypeError where 
    TypeMismatch :: Type -> Type -> TypeError
    UndefinedVar :: Ident -> TypeError
    DuplicateVar :: Ident -> TypeError
    deriving Show
 
-data ConversionError where 
-   BadConvert :: String -> ConversionError 
+data ConvertError where 
+   BadConvert :: String -> ConvertError 
    deriving Show
 
 data PrettyError where 
@@ -110,5 +121,9 @@ data PrettyError where
    BadUop  :: UOp -> PrettyError 
    BadAop  :: AOp -> PrettyError 
    Misc    :: String -> PrettyError
+   deriving Show
+
+data Constraint where 
+   Stuff :: Constraint 
    deriving Show
 
