@@ -1,7 +1,0 @@
-1. Add it to AST
-   - Make sure to add it everywhere
-2. Convert it to AST from parsed ASTs (Py and Jav)
-3. Go through the entire typechecker and add it everywhere
-   - getVars
-   - So much more
-4. Profit

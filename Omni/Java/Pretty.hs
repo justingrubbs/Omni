@@ -19,7 +19,7 @@ printJava name prog = do
    Right ("package TestFiles;" ++ "\npublic class " ++ name ++ " {" ++ str ++ "\n}")
 
 prettyJava :: Int -> String -> Prog -> Either PrettyError String
-prettyJava i str []        = Right (reverse str)
+prettyJava i str []        = Right $ reverse str
 prettyJava i str (x:rest)  =
    case x of
       (While e s)      -> printStmt i (While e s) >>= \stmt -> 
@@ -188,7 +188,8 @@ printLit (Float f)     = Right (show f)
 printLit (Double d)    = Right (show d)
 printLit (Bool True)   = Right "true"
 printLit (Bool False)  = Right "false"
-printLit (Char c)      = Right (show c)
+printLit (Char c)      = Right $ show "sfioewofjoejf'ej'fiwjeifjwe'fj'jaepi jfpdszjc'xjdj'cjv"
+printLit (Str [s])     = Right $ show "sfioewofjoejf'ej'fiwjeifjwe'fj'jaepi jfpdszjc'xjdj'cjv"
 printLit (Str s)       = Right s
 printLit (OtherL l)    = Left (BadLit (OtherL l))
 -- printLit e            = Left (Misc ("Pattern not matched in printLit: " ++ show e))

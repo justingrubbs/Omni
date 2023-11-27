@@ -1,100 +1,100 @@
 :q
-:toPyth test.java
-:toJava func.py
-:q
-:toJava func.py
-:toPyth func.java
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:q
-:toPyth test.java
-:toPyth test.java
-:toPyth test.java
 :toJava test.py
-:toJava test.py
-:toPyth py.java
-:toJava py.py
-:toJava func.py
-:q
-:toJava func.py
-:q
-:toJava func.py
-:toJava func.py
-:toJava func.py
-:toJava py.py
-:toJava py.py
-:toJava func.py
 :toJava example.py
-:toJava omni.py
-:toJava omni.py
-:toJava omni.py
 :q
-:toJava omni.py
-:toPyth omni.java
-:toPyth monad.java
-:toJava monad.py
-:toPyth func.java
-:toJava func.py
+:toJava test.py
+:q
+:toJava example.py
+:q
+:toJava example.py
+:toJava example.py
+:q
+:toJava example.py
+:parse TestFiles/example.java
+:q
+:parse TestFiles/example.java
+:toJava example.py
+:q
+:toJava example.py
+:q
+:toJava example.py
+:q
+:toJava example.py
+:q
+:
+:toJava example.py
+:q
+:toJava example.py
+:q
+:toJava example.py
+:toJava test.py
+:r
+:toJava test.py
+:toPyth test.java
+:toJava test.py
+:toJava test.py
+:toPyth 
+:toPyth    ef8e8f
+:toPyth    
+:toPyth 
+:toPyth
+:toPyth e e
+:toJava d d
+:toJava d
+:q
+:
+d
+d
+:test
+:toJava quirks.py
+:toPyth quirks.java
+:toJava quirks.py
 :toPyth example.java
 :toJava example.py
-:toJava example.py
+:q
+:toJava string.py
+:parse TestFiles/string.py
+:q
+:parse TestFiles/string.py
+:toJava string.py
+:q
+:toJava string.py
+:toJava string.py
+:parse TestFiles/string.py
+:q
+:parse TestFiles/string.py
+:parse string.py
+:toJava string.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:
+qq
+:
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:toJava test.py
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toJava test.py
+:q
+:toPyth test.java
+:toJava func.py
 :q
 :toJava func.py
-:q
-:toJava func.py
-:toJava func.py
-:toJava func.py
-:toJava func.py
-:q
-:toJava func.py
-:toJava func.py
-:q
 :toPyth func.java
-:toJava func.py
+:toPyth test.java
 :q
-:toJava func.py
+:toPyth test.java
 :q
-:toJava omni.py
-:q
-:toJava omni.py
-:toJava omni.py
+:toPyth test.java

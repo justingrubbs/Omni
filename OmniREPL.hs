@@ -66,19 +66,17 @@ omniREPL = do
                   shouldLoop <- case cmd of
                      ":q"        -> return False
                      ":quit"     -> return False
-                     x           ->
-                        -- Was just using (cmd:r:rest) but this caused error message when `:q` or `:quit`
-                        -- However, doing this at all allows weird stuff like:
-                           -- `:parse javaTest.java javaTest.java ldfjkls dfofnic`
-                        let (r:rest') = rest
+                     x           -> 
+                        if null rest || length rest > 1
+                        then lift (outputStrLn "Invalid input") >> return True
+                        else let (f:rest') = rest
                         in case x of 
-                                                           -- TestFiles is temporary
-                           ":toPyth" -> toPy   r (readFile ("TestFiles/" ++ r))         >> return True
-                           ":toJava" -> toJava r (readFile ("TestFiles/" ++ r))         >> return True
+                           ":toPyth" -> toPy   f (readFile ("TestFiles/" ++ f)) >> return True
+                           ":toJava" -> toJava f (readFile ("TestFiles/" ++ f)) >> return True
                            ":parse"  ->
-                              let (fName, ext) = stripExtension "" r
-                              in liftIO $ parseCheck (extToLang ext) r  >> return True -- Will be removed at some point
-                           _           -> lift (outputStrLn ("Error: " ++ s))       >> return True
+                              let (fName, ext) = stripExtension "" f
+                              in liftIO $ parseCheck (extToLang ext) f          >> return True -- Will be removed at some point
+                           _           -> lift (outputStrLn ("Error: " ++ s))   >> return True
                   when shouldLoop loop
 
 stripExtension :: String -> String -> (String, String)
@@ -95,6 +93,7 @@ pySave s doc = do
    lift $ outputStrLn ("The file has been successfully created: \
    \" ++ s ++ ".py")
 
+--REMOVE TESTFILES FOLDER EXTENSION
 javaSave :: String -> String -> OmniM ()
 javaSave s doc = do
    liftIO $ maybe (return ()) (writeFile ("TestFiles/"++s ++ ".java")) (Just doc)
@@ -106,7 +105,7 @@ extToLang x =
    case x of
       "py"   -> Python
       "java" -> Java
-      y      -> error ("Extension " ++ y ++ " is not supported.")
+      y      -> error $ "`" ++ y ++ "` files are not supported."
 
 toPy :: String -> IO String -> OmniM ()
 toPy s txt =
@@ -132,7 +131,6 @@ toJava s txt =
       else do
          txt' <- liftIO txt
          case translate txt' s (extToLang ext) Java of
-         -- case translate txt' (extToLang ext) Java of
             Left  err -> error $ show err
             Right f   -> do
                modify (\qs -> qs { omniDoc = Just txt
@@ -141,34 +139,34 @@ toJava s txt =
                      )
                javaSave fName f
 
--- The lefts of translate and typecheck should be specific errors but whatever for now -- probably elsewhere as well
--- STILL NEED TO DO SOME TYPE CHECKING FOR JAVA? JUST FOR CONSISTENCY? UNDEFINED VARS AND SUCH  -- no
 translate :: String -> String -> Lang -> Lang -> Either Error String
 translate txt name lang new = do
    let (name',_) = stripExtension "" name
-   case lang of 
-      -- This can all be generalized much better
-      Python -> 
-         case pyParse txt name of
-            Left err -> Left $ ParseError $ Generic err
-            Right p  -> do
-               case checkProg p of           
-                  Left err -> Left $ TypeError err
-                  Right p' -> 
-                     case prettyPrint new name' p' of 
-                        Left err -> Left $ PrettyError err
-                        Right x  -> Right x
-      Java -> 
-         case javaParse txt of
-            Left err -> Left $ ParseError $ Generic err
-            Right p  -> 
-               case prettyPrint new name' p of 
-                  Left err -> Left $ PrettyError err
-                  Right x  -> Right x
+   parsedProg  <- parse lang txt name
+   checkedProg <- typeCheck lang parsedProg 
+   prettyProg  <- prettyPrint new name' checkedProg
+   Right prettyProg
 
-prettyPrint :: Lang -> String -> Prog -> Either PrettyError String
-prettyPrint Python _    = printPython
-prettyPrint Java   name = printJava name
+parse :: Lang -> String -> String -> Either Error Prog 
+parse Python txt name = pyParse txt name 
+parse Java   txt _    = javaParse txt
+
+typeCheck :: Lang -> Prog -> Either Error Prog 
+typeCheck Python p = 
+   case checkProg p of 
+      Left err -> Left $ TypeError err 
+      Right p' -> Right p'
+typeCheck _      p = Right p
+
+prettyPrint :: Lang -> String -> Prog -> Either Error String
+prettyPrint Python _    p = 
+   case printPython p of 
+      Left err -> Left $ PrettyError err
+      Right p' -> Right p'
+prettyPrint Java   name p = 
+   case printJava name p of 
+      Left err -> Left $ PrettyError err 
+      Right p' -> Right p'
 
 parseCheck ::  Lang -> FilePath -> IO ()
 parseCheck lang =

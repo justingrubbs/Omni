@@ -26,10 +26,6 @@ data Type where
    OtherT   :: String -> Type
    deriving (Show, Eq)
 
--- After talking shit about the way the Java parser works, I would like to change mine to be more like it
-   -- Specifically, make a new type Assign that has two? one? constructor so that elabAssign does not have to have a wildcard
-
--- apparently for loops are just while loops, makes sense but didn't know
 data Stmt where 
    Assign    :: [Ident] -> Expr -> Stmt 
    AugAssign :: Ident -> AOp -> Expr -> Stmt
@@ -53,7 +49,7 @@ data Expr where
    Lit    :: Literal -> Expr
    Var    :: Ident -> Expr 
    Array  :: [Expr] -> Expr 
-   ArrayA :: [Expr] -> Type -> Expr -- for re-assigning arrays in Java
+   -- ArrayA :: [Expr] -> Type -> Expr -- for re-assigning arrays in Java
    Bin    :: BOp -> Expr -> Expr -> Expr
    Un     :: UOp -> Expr -> Expr
 -- PredefinedCall :: idk      -- append() in python and others (Print also probably)

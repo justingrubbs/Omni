@@ -27,10 +27,16 @@ import            Data.Functor
 
 -- Defining Contexts and Monad Transformer Stack:
 ---------------------------------------------------------------------
--- Ident is a type synonym for strings
+
+-- Context that maps variables to their types
 type Ctx  = M.Map Ident Type
-type SCtx = M.Map Ident [Ident]  -- Shadowed variables
-type VCtx = M.Map Ident Ident    -- Cannot think of a good name but reflects current variable (either original or generated variable)
+
+-- Context that maps variables to an array containing their shadowed variables
+type SCtx = M.Map Ident [Ident]
+
+-- Context that maps source variables to the current generated variable (or Nothing if the source variable is current)
+type VCtx = M.Map Ident Ident 
+
 type Env  = (Ctx, SCtx, VCtx)
 
 type Count = Int
@@ -62,40 +68,26 @@ inc = do
 -- Variable Generation and Maintenance:
 ---------------------------------------------------------------------
 getExpr :: Stmt -> Contexts Stmt
-getExpr (Assign x e)        = do
-   e' <- getVars e
-   return $ Assign x e'
-getExpr (AugAssign v a e)   = do 
-   e' <- getVars e 
-   return $ AugAssign v a e'
+getExpr (Assign x e)        = Assign x <$> getVars e
+getExpr (AugAssign v a e)   = AugAssign v a <$> getVars e
 getExpr (Declare ty x e)    =
    case e of
       Nothing -> return $ Declare ty x e
       Just e' -> do
          expr <- getVars e'
          return $ Declare ty x (Just expr)
-getExpr (IfThen e s)        = do
-   e' <- getVars e
-   s' <- getExpr s
-   return $ IfThen e' s'
-getExpr (IfElse e s1 s2)    = do
-   e' <- getVars e
-   s1' <- getExpr s1
-   s2' <- getExpr s2
-   return $ IfElse e' s1' s2'
-getExpr (While e s)         = do
-   s' <- getExpr s
-   return $ While e s'
-getExpr (Block s)           = do
-   -- I was unsure how to convert `map (getExpr vCtx) s` to work with monads
-      -- ChatGPT offered `sequence $ map getExpr s` which VSCode recommended reducing to `mapM getExpr s`
-   s' <- mapM getExpr s
-   return $ Block s'
-getExpr (ExprStmt e)        = do
-   e' <- getVars e
-   return $ ExprStmt e'
+getExpr (IfThen e s)        = IfThen <$> getVars e <*> getExpr s
+getExpr (IfElse e s1 s2)    = IfElse <$> getVars e <*> getExpr s1 <*> getExpr s2
+getExpr (While e s)         = While e <$> getExpr s
+getExpr (Block s)           = Block <$> mapM getExpr s
+getExpr (ExprStmt e)        = ExprStmt <$> getVars e
 getExpr (FuncDecl v e ty s) = return $ FuncDecl v e ty s
-getExpr (Return e)          = return $ Return e
+getExpr (Return e)          = 
+   case e of 
+      Nothing -> return $ Return e
+      Just e' -> do 
+         expr <- getVars e' 
+         return $ Return (Just expr)
 getExpr (OtherS s)          = return $ OtherS s
 -- getExpr x                   = error $ show x ++ " was not intended to be in prog"
 
@@ -108,19 +100,10 @@ getBlockExpr _              _         = undefined
 
 getVars :: Expr -> Contexts Expr
 getVars (Var x)        = Var <$> getVar x
-getVars (Bin op e1 e2) = do
-   e1' <- getVars e1
-   e2' <- getVars e2
-   return $ Bin op e1' e2'
-getVars (Un op e1)     = do
-   e1' <- getVars e1
-   return $ Un op e1'
-getVars (Array x)      = do
-   x' <- mapM getVars x
-   return $ Array x'
-getVars (Output e)     = do
-   e' <- getVars e
-   return $ Output e'
+getVars (Bin op e1 e2) = Bin op <$> getVars e1 <*> getVars e2
+getVars (Un op e1)     = Un op <$> getVars e1
+getVars (Array x)      = Array <$> mapM getVars x
+getVars (Output e)     = Output <$> getVars e
 getVars x              = return x
 
 eng :: String
@@ -145,10 +128,8 @@ genVar = do
    ctx <- askC
    var <- base26
    case M.lookup var ctx of
-      Just x  -> do
-         genVar
-      Nothing -> do 
-         return var
+      Just x  -> genVar
+      Nothing -> return var
 
 getVar :: Ident -> Contexts Ident
 getVar v = Data.Maybe.fromMaybe v . M.lookup v <$> askV
@@ -173,7 +154,11 @@ elaborateProg (Assign x e : rest) prog = do
    e' <- getVars e
    ty <- infer e'
       -- `x` could be undefined, reassigned, or redefined
-   elabAssign (Assign x e' : rest) prog ty (Declare ty [] (Just e')) (Assign [] e')  
+   elabAssign (Assign x e' : rest) prog ty (Declare ty [] (Just e')) (Assign [] e') 
+elaborateProg (AugAssign v a e : rest) prog = do 
+   e' <- getVars e 
+   ty <- infer e' 
+   elabAugAssign (AugAssign v a e' : rest) prog ty
 elaborateProg (Block s : rest) prog   = do
    s' <- elaborateProg s []
    elaborateProg rest (Block s' : prog)
@@ -182,7 +167,7 @@ elaborateProg (IfThen e s : rest) prog   =
       Block s' -> do
          e' <- getVars e
          s'' <- elaborateProg s' []
-         elaborateProg rest (IfThen e' (Block s'') : prog)
+         elaborateProg rest (IfThen e' (Block (reverse s'')) : prog)
       other    -> error $ "Expected block but found the following instead: " ++ show other
 elaborateProg (IfElse e s o : rest) prog = 
    case s of 
@@ -191,13 +176,13 @@ elaborateProg (IfElse e s o : rest) prog =
          s2 <- elaborateProg s1 []
          s3 <- elaborateProg [o] []
          case s3 of
-            [x] -> elaborateProg rest (IfElse e' (Block s2) x : prog)
+            [x] -> elaborateProg rest (IfElse e' (Block (reverse s2)) x : prog)
             _   -> error "oops in elaborateProg"
       other    -> error $ "Expected block but found the following instead: " ++ show other
 elaborateProg (While e (Block s) : rest) prog = do
    e' <- getVars e
    s' <- elaborateProg s []
-   while <- getExpr $ While e' (Block s')
+   while <- getExpr $ While e' (Block (reverse s'))
    elaborateProg rest (while : prog)
 elaborateProg (FuncDecl v args ty (Block s) : rest) prog = do 
    local (\(ctx,sCtx,vCtx) -> (M.empty, M.empty, M.empty)) $ do  -- maybe M.empty contexts
@@ -255,6 +240,21 @@ elabAssign' (Assign (x:xs) e : rest) nProg ty y da a = do
                $ elabAssign (Assign xs e : rest) nProg ty (addVar da x') a
 elabAssign' _ _ _ _ _ _ = undefined
 
+elabAugAssign :: Prog -> Prog -> Type -> Contexts Prog 
+elabAugAssign (AugAssign v a e : rest) nProg ty = do 
+   ctx <- askC 
+   case M.lookup v ctx of 
+      Nothing -> throwError $ UndefinedVar v
+      Just x  -> do 
+         vCtx <- askV 
+         case M.lookup v vCtx of 
+            Nothing -> 
+               if ty == x 
+               then elaborateProg rest (AugAssign v a e : nProg) 
+               else throwError $ TypeMismatch ty x
+            Just y  -> elabAugAssign (AugAssign y a e : rest) nProg ty
+elabAugAssign _ _ _ = error "Impossible pattern match fail in elabAugAssign"
+
 addVar :: Stmt -> Ident -> Stmt
 addVar (Declare ty x (Just e)) var = Declare ty (var : x) (Just e)
 addVar (Assign x e)            var = Assign (var : x) e
@@ -278,7 +278,7 @@ infer :: Expr -> Contexts Type
 infer (Lit (Int n))    = return TyInt
 infer (Lit (Bool b))   = return TyBool
 infer (Lit (Char c))   = return TyChar
-infer (Lit (Str [s]))  = return TyChar
+infer (Lit (Str [s]))  = return TyStr
 infer (Lit (Str s))    = return TyStr
 infer (Var v)          = do
    ctx <- askC
@@ -287,27 +287,23 @@ infer (Var v)          = do
       Just x  -> return x
 infer (Bin op e1 e2)   = do
    e1' <- infer e1
-   check e2 e1' *>
-      case op of
-         And -> check e1 TyBool $> TyBool
-         Or  -> check e1 TyBool $> TyBool
-         Eq  -> return TyBool
-         NEq -> return TyBool
-         Less -> return TyBool
-         Greater -> return TyBool
-         LessEq -> return TyBool
-         GreaterEq -> return TyBool
-         -- Mul -> Can be num -> num -> num or string -> num -> [string?] regardless, need to allow for two different types      
-         Add ->
-            if e1' == TyInt
-            then return TyInt
-            else
-               if e1' == TyStr
-               then return TyStr
-               else do
-                  e2' <- infer e2
-                  throwError $ TypeMismatch e1' e2'
-         x   -> check e1 TyInt $> TyInt
+   check e2 e1' *> case op of
+      And -> check e1 TyBool $> TyBool
+      Or  -> check e1 TyBool $> TyBool
+      Eq  -> return TyBool
+      NEq -> return TyBool
+      Less -> return TyBool
+      Greater -> return TyBool
+      LessEq -> return TyBool
+      GreaterEq -> return TyBool
+      -- Mul -> Can be num -> num -> num or string -> num -> [string?] regardless, need to allow for two different types      
+      Add -> case e1' of 
+         TyInt -> return TyInt 
+         TyStr -> return TyStr 
+         _     -> do 
+            e2' <- infer e2 
+            throwError $ TypeMismatch e1' e2'
+      x   -> check e1 TyInt $> TyInt
 infer (Un op e)        =
    case op of
       Neg -> check e TyInt $> TyInt
@@ -337,7 +333,6 @@ inferArray ty = foldr
 --    case M.lookup v ctx of 
 --       Nothing -> error $ "Bad inference. Idiot. " ++ show v 
 --       Just ty -> inferArgs rest (Args ty (reverse v) : args) 
-
 
 check :: Expr -> Type -> Contexts ()
 check e ty = do

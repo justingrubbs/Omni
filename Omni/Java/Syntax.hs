@@ -15,10 +15,10 @@ import            Language.Java.Pretty
 
 -- Parsing Java Compilation Unit:
 ---------------------------------------------------------------------
-javaParse :: String -> Either String Prog
+javaParse :: String -> Either Error Prog
 javaParse txt =
    case P.parser P.compilationUnit txt of
-      Left  err -> error (show err)
+      Left  err -> Left (ParseError (Generic $ show err))
       Right x   -> Right (convertJavaAST x)
       -- Right x   ->  error $ show x
 

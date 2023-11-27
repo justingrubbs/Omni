@@ -1,31 +1,33 @@
 def main():
    x = 3
-   x = 10
-   y = z = 10
-   A = [True]
-   B = C = D = False
-   B = True
-   o = 'y'
+   x = y = z = 10
+   x = [True]
+   x = y = z = False
+   x = True
+   A = "y"
    x = 3 / 10 - 7 + 5
-   B = True
-   B = 3 <= 4
-   B = 3 > 4
-   E = [1,2,3]
-   F = "Test!"
-   F = 'Q'
+   x = True
+   x = 3 <= 4
+   x = 3 > 4
+   x = [1,2,3]
+   x = "Test!"
+   x = "Q"
    if 2 == 2:
       if 2 == 2:
          if 4 == 4:
             x = 1000
-      B = False
-      F = "Wrong"
+      x = False
+      x = "Wrong"
    if 2 == 2:
-      B = True
+      x = False
+      x = True
    elif 3 == 2:
-      B = False
+      x = True
+      x = False
    elif 2 == 100:
-      B = False
+      x = True
+      x = False
    else:
-      B = False
+      x = True
+      x = False
 
-main()

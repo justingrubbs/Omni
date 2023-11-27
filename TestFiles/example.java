@@ -1,9 +1,15 @@
 package TestFiles;
 public class example {
 	public static void main(String[] args) {
-		int x = 3;
+		boolean x = true;
+		if (x) {
+			int A = 22;
+			A += 1;
+		}
 		System.out.println(x);
-		boolean A = true;
-		System.out.println(A);
+		System.out.println(add10(x));
+	}
+	public static Poly add10(Poly x) {
+		return x + 10;
 	}
 }

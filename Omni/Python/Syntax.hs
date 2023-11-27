@@ -15,10 +15,10 @@ import qualified  Language.Python.Common.Pretty       as T
 
 -- Parsing Python Module:
 ---------------------------------------------------------------------
-pyParse :: String -> String -> Either String Prog
+pyParse :: String -> String -> Either Error Prog
 pyParse txt f =
    case P.parseModule txt f of
-      Left  err   -> error (show err)
+      Left  err   -> Left $ ParseError $ Generic $ show err
       Right (p,_) -> Right (convertPythonAST p)
       -- Right (p,_) -> error $ show p
 
