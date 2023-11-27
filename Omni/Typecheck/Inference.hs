@@ -30,14 +30,13 @@ import            Data.Functor
 -- Ident is a type synonym for strings
 type Ctx  = M.Map Ident Type
 type SCtx = M.Map Ident [Ident]  -- Shadowed variables
-type VCtx = M.Map Ident Ident
+type VCtx = M.Map Ident Ident    -- Cannot think of a good name but reflects current variable (either original or generated variable)
 type Env  = (Ctx, SCtx, VCtx)
 
-type Count = Int  -- Counter 
+type Count = Int
 
 type Contexts = ReaderT Env (StateT Count (WriterT [Constraint] (ExceptT TypeError Identity)))
 
--- runEnv :: Env -> Count -> Prog -> Either TypeError (Prog, [Constraint])
 runEnv :: Monoid w =>
    r
    -> s
@@ -66,6 +65,9 @@ getExpr :: Stmt -> Contexts Stmt
 getExpr (Assign x e)        = do
    e' <- getVars e
    return $ Assign x e'
+getExpr (AugAssign v a e)   = do 
+   e' <- getVars e 
+   return $ AugAssign v a e'
 getExpr (Declare ty x e)    =
    case e of
       Nothing -> return $ Declare ty x e
@@ -92,9 +94,10 @@ getExpr (Block s)           = do
 getExpr (ExprStmt e)        = do
    e' <- getVars e
    return $ ExprStmt e'
-getExpr (OtherS s)          = return $ OtherS s
 getExpr (FuncDecl v e ty s) = return $ FuncDecl v e ty s
-getExpr x                   = error $ show x ++ " was not intended to be in prog"
+getExpr (Return e)          = return $ Return e
+getExpr (OtherS s)          = return $ OtherS s
+-- getExpr x                   = error $ show x ++ " was not intended to be in prog"
 
 getBlockExpr :: Stmt -> Stmt -> Contexts Stmt
 getBlockExpr (Block [])     (Block y) = return $ Block (reverse y)
@@ -102,22 +105,6 @@ getBlockExpr (Block (x:xs)) (Block y) = do
    expr <- getExpr x
    getBlockExpr (Block xs) (Block (expr : y))
 getBlockExpr _              _         = undefined
-
-eng :: String
-eng = ['A'..'Z']  -- Arbitrary letters, is there a more standard way to do this?
-
-base26 :: Contexts String  -- Need to edit this
-base26 = do 
-   i <- get
-   case i of 
-      0 -> return [head eng]
-      n -> return $ reverse (f n)
-         where
-            base = length eng
-            f 0 = []
-            f x =
-               let (q, r) = (x - 1) `divMod` base
-               in (eng !! r) : f q
 
 getVars :: Expr -> Contexts Expr
 getVars (Var x)        = Var <$> getVar x
@@ -136,16 +123,31 @@ getVars (Output e)     = do
    return $ Output e'
 getVars x              = return x
 
+eng :: String
+eng = ['A'..'Z']  -- Arbitrary letters, is there a more standard way to do this?
+
+base26 :: Contexts String  -- Need to edit this
+base26 = do 
+   i <- get
+   inc
+   case i of 
+      0 -> return [head eng]
+      n -> return $ reverse (f n)
+         where
+            base = length eng
+            f 0 = []
+            f x =
+               let (q, r) = (x - 1) `divMod` base
+               in (eng !! r) : f q
+
 genVar :: Contexts Ident
 genVar = do
    ctx <- askC
    var <- base26
    case M.lookup var ctx of
       Just x  -> do
-         inc
          genVar
       Nothing -> do 
-         inc 
          return var
 
 getVar :: Ident -> Contexts Ident
@@ -182,7 +184,7 @@ elaborateProg (IfThen e s : rest) prog   =
          s'' <- elaborateProg s' []
          elaborateProg rest (IfThen e' (Block s'') : prog)
       other    -> error $ "Expected block but found the following instead: " ++ show other
-elaborateProg (IfElse e s o : rest) prog   = 
+elaborateProg (IfElse e s o : rest) prog = 
    case s of 
       Block s1 ->  do
          e' <- getVars e
@@ -197,6 +199,10 @@ elaborateProg (While e (Block s) : rest) prog = do
    s' <- elaborateProg s []
    while <- getExpr $ While e' (Block s')
    elaborateProg rest (while : prog)
+elaborateProg (FuncDecl v args ty (Block s) : rest) prog = do 
+   local (\(ctx,sCtx,vCtx) -> (M.empty, M.empty, M.empty)) $ do  -- maybe M.empty contexts
+      s' <- elaborateProg s []
+      elaborateProg rest (FuncDecl v args ty (Block $ reverse s') : prog)
 elaborateProg (stmt : rest) prog      = do
    s' <- getExpr stmt
    elaborateProg rest (s' : prog)
@@ -215,7 +221,8 @@ elabAssign (Assign (x:xs) e : rest) nProg ty da a = do
    ctx <- askC
    case M.lookup x ctx of
          -- Assignment before declaration is fine in Python, but need to add the declaration for explicit languages
-      Nothing -> local (\(ctx, sCtx, vCtx) -> (M.insert x ty ctx, sCtx, vCtx)) $ elabAssign (Assign xs e : rest) nProg ty (addVar da x) a
+      Nothing -> local (\(ctx, sCtx, vCtx) -> (M.insert x ty ctx, sCtx, vCtx)) 
+         $ elabAssign (Assign xs e : rest) nProg ty (addVar da x) a
       Just y  -> elabAssign' (Assign (x:xs) e : rest) nProg ty y da a
 elabAssign other nProg _ _ _ = elaborateProg other nProg
 
@@ -225,22 +232,27 @@ elabAssign' (Assign (x:xs) e : rest) nProg ty y da a = do
    if x `elem` M.elems vCtx
    then do 
       x' <- genVar
-      local (\(ctx, sCtx, vCtx) -> (M.insert x' ty ctx, sCtx, M.insert x x' vCtx)) $ elabAssign (Assign xs e : rest) nProg ty (addVar da x') a
+      local (\(ctx, sCtx, vCtx) -> (M.insert x' ty ctx, sCtx, M.insert x x' vCtx)) 
+         $ elabAssign (Assign xs e : rest) nProg ty (addVar da x') a
    else if y == ty 
-   then local (\(ctx, sCtx, vCtx) -> (ctx, sCtx, M.delete x vCtx)) $ elabAssign (Assign xs e : rest) nProg ty da (addVar a x)
+   then local (\(ctx, sCtx, vCtx) -> (ctx, sCtx, M.delete x vCtx)) 
+      $ elabAssign (Assign xs e : rest) nProg ty da (addVar a x)
    else do
       sCtx <- askS
       case M.lookup x sCtx of
          Just vList -> do
             subV <- findSubVariable ty vList
             case subV of
-               Just s  -> local (\(ctx, sCtx, vCtx) -> (ctx, sCtx, M.insert x s vCtx)) $ elabAssign (Assign xs e : rest) nProg ty da (addVar a s)
+               Just s  -> local (\(ctx, sCtx, vCtx) -> (ctx, sCtx, M.insert x s vCtx)) 
+                  $ elabAssign (Assign xs e : rest) nProg ty da (addVar a s)
                Nothing -> do
                   x' <- genVar
-                  local (\(ctx, sCtx, vCtx) -> (M.insert x' ty ctx, M.insert x (x' : vList) sCtx, M.insert x x' vCtx)) $ elabAssign (Assign xs e : rest) nProg ty (addVar da x') a
+                  local (\(ctx, sCtx, vCtx) -> (M.insert x' ty ctx, M.insert x (x' : vList) sCtx, M.insert x x' vCtx)) 
+                     $ elabAssign (Assign xs e : rest) nProg ty (addVar da x') a
          Nothing    -> do
             x' <- genVar
-            local (\(ctx, sCtx, vCtx) -> (M.insert x' ty ctx, M.insert x [x'] sCtx, M.insert x x' vCtx)) $ elabAssign (Assign xs e : rest) nProg ty (addVar da x') a
+            local (\(ctx, sCtx, vCtx) -> (M.insert x' ty ctx, M.insert x [x'] sCtx, M.insert x x' vCtx)) 
+               $ elabAssign (Assign xs e : rest) nProg ty (addVar da x') a
 elabAssign' _ _ _ _ _ _ = undefined
 
 addVar :: Stmt -> Ident -> Stmt
@@ -305,6 +317,9 @@ infer (Array [])       = return $ TyArr Poly  -- Type constraints needed?
 infer (Array (x:rest)) = do
    xTy <- infer x
    inferArray xTy rest
+infer (Call v e)       = do 
+   e' <- mapM infer e 
+   return Poly
 infer x                = error $ "The following expression is not yet implemented: " ++ show x -- so this should show the actual expression
 
 inferArray :: Type -> [Expr] -> Contexts Type -- Not sure what is going on here, VSCode recommended changes
@@ -314,6 +329,15 @@ inferArray ty = foldr
               (do ctx <- askC
                   check x ty))
       (return (TyArr ty))
+
+-- inferArgs :: [Args] -> [Args] -> Contexts [Args]
+-- inferArgs []       args = return $ reverse args 
+-- inferArgs ((Args _ v):rest) args = do 
+--    ctx <- askC 
+--    case M.lookup v ctx of 
+--       Nothing -> error $ "Bad inference. Idiot. " ++ show v 
+--       Just ty -> inferArgs rest (Args ty (reverse v) : args) 
+
 
 check :: Expr -> Type -> Contexts ()
 check e ty = do

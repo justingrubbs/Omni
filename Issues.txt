@@ -14,6 +14,7 @@
  - Constraint-solving and unification need to be implemented in some capacity 
  - Lot of clean-up necessary before it's a decent project
  - Modularize the REPL translate function better
+ - Main function band-aid fix needs to be made more secure
 
 "Static-Type Checking:
    - Verify safety of program before execution.

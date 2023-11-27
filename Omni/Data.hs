@@ -38,7 +38,7 @@ data Stmt where
    IfThen    :: Expr -> Stmt -> Stmt 
    IfElse    :: Expr -> Stmt -> Stmt -> Stmt 
    While     :: Expr -> Stmt -> Stmt 
-   -- For       :: Stmt
+-- For       :: Stmt
    FuncDecl  :: Ident -> [Args] -> Type -> Stmt -> Stmt
    ExprStmt  :: Expr -> Stmt
    Return    :: Maybe Expr -> Stmt
@@ -53,8 +53,10 @@ data Expr where
    Lit    :: Literal -> Expr
    Var    :: Ident -> Expr 
    Array  :: [Expr] -> Expr 
+   ArrayA :: [Expr] -> Type -> Expr -- for re-assigning arrays in Java
    Bin    :: BOp -> Expr -> Expr -> Expr
    Un     :: UOp -> Expr -> Expr
+-- PredefinedCall :: idk      -- append() in python and others (Print also probably)
    Call   :: [Ident] -> [Expr] -> Expr
    Output :: Expr -> Expr 
    OtherE :: String -> Expr

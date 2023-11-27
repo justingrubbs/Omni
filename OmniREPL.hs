@@ -44,7 +44,8 @@ description = "\nWelcome to Omni:\n\n\
    \Commands:\n\
    \  :toPyth [file name]     -- Transcribe a program to Python\n\
    \  :toJava [file name]     -- Transcribe a program to Java\n\
-   \  :quit                   -- Exit\n"
+   \  :quit                   -- Exit\n\
+   \Currently, input files must be located in the `TestFiles` directory.\n"
 
 omniSettings :: Settings IO
 omniSettings = defaultSettings
@@ -70,9 +71,10 @@ omniREPL = do
                         -- However, doing this at all allows weird stuff like:
                            -- `:parse javaTest.java javaTest.java ldfjkls dfofnic`
                         let (r:rest') = rest
-                        in case x of
-                           ":toPyth" -> toPy   r (readFile r)         >> return True
-                           ":toJava" -> toJava r (readFile r)         >> return True
+                        in case x of 
+                                                           -- TestFiles is temporary
+                           ":toPyth" -> toPy   r (readFile ("TestFiles/" ++ r))         >> return True
+                           ":toJava" -> toJava r (readFile ("TestFiles/" ++ r))         >> return True
                            ":parse"  ->
                               let (fName, ext) = stripExtension "" r
                               in liftIO $ parseCheck (extToLang ext) r  >> return True -- Will be removed at some point
@@ -86,15 +88,16 @@ stripExtension f (x:xs) =
       '.' -> (f, xs)
       _   -> stripExtension (f ++ [x]) xs
 
+--REMOVE TESTFILES FOLDER EXTENSION
 pySave :: String -> String -> OmniM ()
 pySave s doc = do
-   liftIO $ maybe (return ()) (writeFile (s ++ ".py")) (Just doc)
+   liftIO $ maybe (return ()) (writeFile ("TestFiles/"++s ++ ".py")) (Just doc)
    lift $ outputStrLn ("The file has been successfully created: \
    \" ++ s ++ ".py")
 
 javaSave :: String -> String -> OmniM ()
 javaSave s doc = do
-   liftIO $ maybe (return ()) (writeFile (s ++ ".java")) (Just doc)
+   liftIO $ maybe (return ()) (writeFile ("TestFiles/"++s ++ ".java")) (Just doc)
    lift $ outputStrLn ("The file has been successfully created: \
    \" ++ s ++ ".java")
 

@@ -13,13 +13,15 @@ import            Omni.Data
 -- Printing Python:
 ---------------------------------------------------------------------
 printPython :: Prog -> Either PrettyError String
-printPython = prettyPython ""
+printPython p = do 
+   str <- prettyPython 0 "" p
+   Right str
 
-prettyPython :: String -> Prog -> Either PrettyError String
-prettyPython text []       = Right (reverse (reverse "\nmain()\n" ++ text))
-prettyPython text (x:rest) = do
-   stmt <- printStmt 0 x
-   prettyPython (reverse stmt ++ text) rest
+prettyPython :: Int -> String -> Prog -> Either PrettyError String
+prettyPython i text []       = Right (reverse (reverse "\nmain()\n" ++ text))
+prettyPython i text (x:rest) = do
+   stmt <- printStmt i x
+   prettyPython i (tab i ++ reverse stmt ++ text) rest
 
 
 -- Statements:
@@ -49,6 +51,14 @@ printStmt i (IfThen e s)          = do
    expr <- printExpr e
    stmt <- printStmt (i+1) s
    Right (tab i ++ "if " ++ expr ++ ":\n" ++ stmt)
+printStmt i (IfElse e s1 s2)      = do
+   expr <- printExpr e
+   stmt1 <- printStmt (i+1) s1
+   case s2 of
+      (IfElse {}) -> printStmt i s2 >>= \stmt2 -> 
+         Right $ "if " ++ expr ++ ":\n" ++ stmt1 ++ "\n" ++ tab i ++ "el" ++ stmt2
+      _ -> printStmt (i+1) s2 >>= \stmt2 -> 
+         Right $ "if " ++ expr ++ ":\n" ++ stmt1 ++ "\n" ++ tab i ++ "else:\n" ++ stmt2
 printStmt i (While e s)           = do
    expr <- printExpr e
    stmt <- printStmt (i+1) s
@@ -72,7 +82,7 @@ printStmt i (Return e)            =
          expr <- printExpr x
          Right (tab i ++ "return " ++ expr)
 printStmt i (OtherS s)            = Left (BadStmt (OtherS s))
-printStmt i x                     = error $ show x
+printStmt i x                     = error $ "Unmatched pattern in printStmt: " ++ show x
 
 printDecl :: Stmt -> String
 printDecl (Declare _ [] _)     = ""
