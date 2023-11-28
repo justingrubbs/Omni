@@ -159,7 +159,7 @@ elabProg (IfThen e (Block s) : rest) prog = do
 -- Need to finish this checkScope
 elabProg (IfElse e s o : rest) prog = 
    case s of 
-      Block s1 -> do
+      Block s1 ->  do
          e' <- getVars e
          s2 <- elabProg s1 []
          s3 <- elabProg [o] []

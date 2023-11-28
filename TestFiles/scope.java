@@ -2,25 +2,26 @@ package TestFiles;
 public class scope {
 	public static void main(String[] args) {
 		boolean x = true;
-		String[][] A;
-		if (x) {
-			if (x) {
-				x = false;
-				A = new String[][] {{"SQUIRREL?"}};
-			}
-		}
-		x = true;
-		boolean[] A;
-		if (x) {
-			x = false;
-			x = true;
-			A = new boolean[] {false};
-		}
-		int C;
-		boolean[][] B;
+		int[] A;
 		if (true) {
-			B = new boolean[][] {{false,true}};
-			C = 12;
+			A = new int[] {3};
 		}
+		int[][] A;
+		if (true) {
+			A = new int[][] {{3}};
+		}
+		int[][][] B;
+		if (true) {
+			B = new int[][][] {{{3}}};
+		}
+		int[][][][] C;
+		if (true) {
+			C = new int[][][][] {{{{3}}}};
+		}
+		boolean[] D;
+		if (true) {
+			D = new boolean[] {false};
+		}
+		String E = "squirrel";
 	}
 }
