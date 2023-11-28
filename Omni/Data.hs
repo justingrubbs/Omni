@@ -49,7 +49,7 @@ data Expr where
    Lit    :: Literal -> Expr
    Var    :: Ident -> Expr 
    Array  :: [Expr] -> Expr 
-   -- ArrayA :: [Expr] -> Type -> Expr -- for re-assigning arrays in Java
+   ArrayA :: [Expr] -> Type -> Expr -- for re-assigning arrays in Java
    Bin    :: BOp -> Expr -> Expr -> Expr
    Un     :: UOp -> Expr -> Expr
 -- PredefinedCall :: idk      -- append() in python and others (Print also probably)

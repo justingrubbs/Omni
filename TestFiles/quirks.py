@@ -1,34 +1,37 @@
-x = 2 * (3 - 2)
+def main():
+   x = 2 * (3 - 2)
 
-x = y = z = 10
+   x = y = z = 10
 
-x = [True]
-x = [False]
-# x.append(False)
+   x = [True]
+   x = [False]
+   # x.append(False)
 
-x = "String"
+   x = "String"
 
-x = 'c'
+   x = 'c'
 
-a = True
-while a == True:
-	a = [[True]]
-print(a)
+   a = True
+   while a == True:
+      a = [[True]]
+   print(a)
 
-a = True 
-if a == True:
-	a = [[True,False]]
-print(a)
+   a = True 
+   if a == True:
+      a = [[True,False]]
+   print(a)
 
-# b = True 
+   # b = True 
 
-# if (b == True):
-# 	b = "Squirrel"
-	
-if True:
-	c = 30
+   # if (b == True):
+   # 	b = "Squirrel"
+      
+   if True:
+      c = 30
 
-print(c)
+   print(c)
 
-if 1:
-	print("Python has values - `if 1:` == `if True:`")
+   if 1:
+      print("Python has values - `if 1:` == `if True:`")
+
+   x = []

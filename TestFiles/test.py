@@ -2,6 +2,7 @@ def main():
    x = 3
    x = y = z = 10
    x = [True]
+   x = [True,False]
    x = y = z = False
    x = True
    A = "y"

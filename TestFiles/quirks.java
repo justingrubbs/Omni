@@ -5,14 +5,14 @@ public class quirks {
 		x = 10;
 		int y,z = y = 10;
 		boolean[] A = {true};
-		A = {false};
+		A = new boolean[] {false};
 		String B = "String";
 		B = 'c';
 		boolean a = true;
 		while (a == true) {
 			boolean[][] C = {{true}};
 		}
-		System.out.println(a); // Honestly should be `C`
+		System.out.println(a);
 		a = true;
 		if (a == true) {
 			boolean[][] D = {{true,false}};
@@ -23,8 +23,8 @@ public class quirks {
 		}
 		System.out.println(c);
 		if (1) {
-         // Ghost `x`??? -- `func.java` helps explain it but this is still weird
-			System.out.println("Python has values - `if 1:` == `if True:`"); 
+			System.out.println("Python has values - `if 1:` == `if True:`");
 		}
+		Poly[] E = {};
 	}
 }

@@ -177,18 +177,18 @@ checkVarDecl (S.VarDeclArray x) =
 checkVarDecl _                  = undefined
 
 convertVarInit :: S.VarInit -> Expr
-convertVarInit (S.InitExp exp)               = convertExpr exp
-convertVarInit (S.InitArray (S.ArrayInit x)) = Array (map convertVarInit x)
+convertVarInit (S.InitExp exp)   = convertExpr exp
+convertVarInit (S.InitArray arr) = convertArrayInit arr
 
+convertArrayInit :: S.ArrayInit -> Expr 
+convertArrayInit (S.ArrayInit a) = Array (map convertVarInit a)
 
 -- Expressions:
 ---------------------------------------------------------------------
 convertExpr :: S.Exp -> Expr
 convertExpr (S.Lit x)                     = Lit (convertLit x)
-
-   -- I think S.Name has a list because of stuff like `int x,y,z = x = y = 3;`   !!!
-   -- Not dealing with that right now, so just ignoring like the rest of them !!!
 convertExpr (S.ExpName (S.Name (x:rest))) = Var (convertIdent x)
+convertExpr (S.ArrayCreateInit _ _ arr)   = convertArrayInit arr
 convertExpr (S.BinOp e1 op e2)            = Bin (convertBinOp op) (convertExpr e1) (convertExpr e2)
 convertExpr (S.PreIncrement e)            = Un Incr (convertExpr e)
 convertExpr (S.PostIncrement e)           = Un Incr (convertExpr e)

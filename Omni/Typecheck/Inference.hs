@@ -20,11 +20,6 @@ import            Control.Monad.Identity
 import            Data.Functor
 
 
--- ReaderT Ctx (Either TypeError) Rest
--- ctx <- ask 
--- local (function to modify context) (computation to run locally)
-
-
 -- Defining Contexts and Monad Transformer Stack:
 ---------------------------------------------------------------------
 
@@ -109,7 +104,7 @@ getVars x              = return x
 eng :: String
 eng = ['A'..'Z']  -- Arbitrary letters, is there a more standard way to do this?
 
-base26 :: Contexts String  -- Need to edit this
+base26 :: Contexts String
 base26 = do 
    i <- get
    inc
@@ -139,22 +134,22 @@ getVar v = Data.Maybe.fromMaybe v . M.lookup v <$> askV
 ---------------------------------------------------------------------
 checkProg :: Prog -> Either TypeError Prog
 checkProg p = do
-   (prog, _) <- runEnv (M.empty, M.empty, M.empty) 0 (testProg p)
+   (prog, _) <- runEnv (M.empty, M.empty, M.empty) 0 (elaborateProg p [])
+   -- trace (show prog) $ pure ()
    Right $ reverse prog
-
--- I do not recall why this is here, doesn't feel necessary but also very well could be 
-testProg :: Prog -> Contexts Prog
-testProg p = elaborateProg p []
 
 -- I considered making this `elaborateProg :: Stmt -> Contexts Stmt` so that I could use map with it instead of manual recursing through
    -- Decided against it because there would be cases in which I need to split a statement into two statements
 elaborateProg :: Prog -> Prog -> Contexts Prog
-elaborateProg []                  prog = return prog
+elaborateProg []                  prog = do 
+   ctx <- askC 
+   return prog
 elaborateProg (Assign x e : rest) prog = do
    e' <- getVars e
    ty <- infer e'
-      -- `x` could be undefined, reassigned, or redefined
-   elabAssign (Assign x e' : rest) prog ty (Declare ty [] (Just e')) (Assign [] e') 
+   case e' of 
+      Array arr -> elabAssign (Assign x (ArrayA arr ty) : rest) prog ty (Declare ty [] (Just e')) (Assign [] (ArrayA arr ty))
+      _         -> elabAssign (Assign x e' : rest) prog ty (Declare ty [] (Just e')) (Assign [] e') 
 elaborateProg (AugAssign v a e : rest) prog = do 
    e' <- getVars e 
    ty <- infer e' 
@@ -167,8 +162,10 @@ elaborateProg (IfThen e s : rest) prog   =
       Block s' -> do
          e' <- getVars e
          s'' <- elaborateProg s' []
-         elaborateProg rest (IfThen e' (Block (reverse s'')) : prog)
+         (prog', new) <- checkScope s'' prog []
+         elaborateProg rest (IfThen e' (Block (reverse new)) : prog')
       other    -> error $ "Expected block but found the following instead: " ++ show other
+-- Need to finish this checkScope
 elaborateProg (IfElse e s o : rest) prog = 
    case s of 
       Block s1 ->  do
@@ -182,8 +179,9 @@ elaborateProg (IfElse e s o : rest) prog =
 elaborateProg (While e (Block s) : rest) prog = do
    e' <- getVars e
    s' <- elaborateProg s []
-   while <- getExpr $ While e' (Block (reverse s'))
-   elaborateProg rest (while : prog)
+   (prog', new) <- checkScope s' prog []
+   while <- getExpr $ While e' (Block (reverse new))
+   elaborateProg rest (while : prog')
 elaborateProg (FuncDecl v args ty (Block s) : rest) prog = do 
    local (\(ctx,sCtx,vCtx) -> (M.empty, M.empty, M.empty)) $ do  -- maybe M.empty contexts
       s' <- elaborateProg s []
@@ -254,6 +252,15 @@ elabAugAssign (AugAssign v a e : rest) nProg ty = do
                else throwError $ TypeMismatch ty x
             Just y  -> elabAugAssign (AugAssign y a e : rest) nProg ty
 elabAugAssign _ _ _ = error "Impossible pattern match fail in elabAugAssign"
+
+checkScope :: Prog -> Prog -> Prog -> Contexts (Prog, Prog) 
+checkScope [] prog new = return (prog, reverse new)
+checkScope (Declare ty v e:rest) prog new = case e of 
+   Nothing -> checkScope rest (Declare ty v e : prog) new 
+   Just e' -> case e' of 
+      Array arr -> checkScope rest (Declare ty v Nothing : prog) (Assign v (ArrayA arr ty) : new)
+      _         -> checkScope rest (Declare ty v Nothing : prog) (Assign v e' : new)
+checkScope (s:rest) prog new = checkScope rest prog (s:new)
 
 addVar :: Stmt -> Ident -> Stmt
 addVar (Declare ty x (Just e)) var = Declare ty (var : x) (Just e)

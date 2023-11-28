@@ -158,6 +158,10 @@ printExpr (Array ((Lit (Char c)):cs)) = do
 printExpr (Array arr)   = do
    arr <- printArray arr ""
    Right ("{" ++ reverse arr ++ "}")
+printExpr (ArrayA a ty) = do 
+   arr <- printArray a ""
+   ty' <- printType ty
+   Right $ "new " ++ ty' ++ " {" ++ reverse arr ++ "}"
 printExpr (Bin bop x y) = do
    expr1 <- printExpr x
    expr2 <- printExpr y

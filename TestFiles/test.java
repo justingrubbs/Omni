@@ -5,6 +5,7 @@ public class test {
 		x = 10;
 		int y,z = y = 10;
 		boolean[] A = {true};
+		A = new boolean[] {true,false};
 		boolean B,C,D = C = B = false;
 		B = true;
 		String E = "y";

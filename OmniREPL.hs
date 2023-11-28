@@ -86,14 +86,14 @@ stripExtension f (x:xs) =
       '.' -> (f, xs)
       _   -> stripExtension (f ++ [x]) xs
 
---REMOVE TESTFILES FOLDER EXTENSION
+-- REMOVE TESTFILES FOLDER EXTENSION
 pySave :: String -> String -> OmniM ()
 pySave s doc = do
    liftIO $ maybe (return ()) (writeFile ("TestFiles/"++s ++ ".py")) (Just doc)
    lift $ outputStrLn ("The file has been successfully created: \
    \" ++ s ++ ".py")
 
---REMOVE TESTFILES FOLDER EXTENSION
+-- REMOVE TESTFILES FOLDER EXTENSION
 javaSave :: String -> String -> OmniM ()
 javaSave s doc = do
    liftIO $ maybe (return ()) (writeFile ("TestFiles/"++s ++ ".java")) (Just doc)
