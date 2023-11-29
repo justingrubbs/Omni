@@ -1,100 +1,100 @@
 :q
-:toJava scope.py
-:toJava scope.py
+j elab.py
 :q
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
+j elab.py
 :q
-:toJava scope.py
+j elab.py
 :q
-:toJava scope.py
+j elab.py
+:parse TestFiles/elab.py
+j elab.py
+j elab.py
 :q
-:toJava scope.py
+j elab.py
+j elab.py
+j elab.py
 :q
-:toJava scope.py
+j Issues/unendingLoop.py
+j Issues/unendingLoop.py
+j conditional.py
 :q
-:toJava scope.py
+j elab.py
+j elab.py
+:parse TestFiles/elab.py
 :q
-:toJava scope.py
-:toJava test.py
+:parse TestFiles/elab.py
+j elab.py
+j elab.py
+j elab.py
+j elab.py
 :q
-:toJava test.py
+j elab.py
 :q
-:toJava test.py
+j elab.py
 :q
-:toJava test.py
+j elab.py
 :q
-:toJava test.py
+:parse TestFiles/elab.py
+j elab.py
+j elab.py
+:parse TestFiles/elab.py
+:parse TestFiles/elab.py
+j elab.py
+j elab.py
+j elab.py
 :q
-:toJava test.py
+j elab.py
+j elab.py
+j elab.py
+j elab.py
 :q
-:toJava test.py
+j elab.py
+j elab.py
 :q
-:toJava scope.py
+j elab.py
+j elab.py
+j example.py
+j func.py
+p monad.java
+j monad.py
+p omni.java
+j omni.py
+p py.java
+j py.py
+j quirks.py
+j quirks.py
+j quirks.py
+j quirks.py
+p scope.java
+j scope.py
+p string.java
+j string.py
+p test.java
+j test.py
 :q
-:toJava scope.py
+j elab.py
+j elab.py
+j elab.py
+j elab.py
 :q
-:toJava scope.py
-:toJava scope.py
+j elab.py
 :q
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
+j elab.py
+j elab.py
+j elab.py
+j elab.py
+j elab.py
 :q
-:toJava scope.py
+j elab.py
+j elab.py
+j elab.py
 :q
-:toJava scope.py
+j elab.py
 :q
-:toJava scope.py
+j elab.py
+j elab.py
+j elab.py
+j elab.py
 :q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:parse TestFiles/scope.py
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:q
-:toJava scope.py
-:q
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
-:toJava scope.py
+j elab.py
+j elab.py

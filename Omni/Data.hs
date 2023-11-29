@@ -12,20 +12,6 @@ data Lang where
    Java   :: Lang 
    deriving Show
 
-data Type where 
-   Poly     :: Type
-   TyInt    :: Type
-   TyFloat  :: Type
-   TyDouble :: Type
-   TyBool   :: Type
-   TyChar   :: Type
-   TyStr    :: Type
-   TyVoid   :: Type
-   TyArr    :: Type -> Type
-   TVar     :: Ident -> Type
-   OtherT   :: String -> Type
-   deriving (Show, Eq)
-
 data Stmt where 
    Assign    :: [Ident] -> Expr -> Stmt 
    AugAssign :: Ident -> AOp -> Expr -> Stmt
@@ -44,6 +30,10 @@ data Stmt where
 data Args where 
    Args :: Type -> Ident -> Args 
    deriving Show
+
+
+
+
 
 data Expr where 
    Lit    :: Literal -> Expr
@@ -65,6 +55,7 @@ data Literal where
    Bool   :: Bool -> Literal 
    Char   :: Char -> Literal 
    Str    :: String -> Literal 
+   Null   :: Literal
    OtherL :: String -> Literal
    deriving Show
 
@@ -73,6 +64,10 @@ data Literal where
 
 -- Java does not have exponentiation built in?
 -- Later, could maybe use Math.pow() or whatever add the import in if exp is used 
+
+
+
+
 
 data BOp = Add | Sub | Mul | Div | Mod | Exp
    | And | Or | Eq | NEq | Less | Greater | LessEq | GreaterEq
@@ -89,6 +84,30 @@ data AOp = AddAssign | SubAssign | MulAssign | DivAssign | ModAssign
    | OtherA String
    deriving (Show, Eq)
 
+
+
+data Type where 
+   Poly     :: Type
+   TyInt    :: Type
+   TyFloat  :: Type
+   TyDouble :: Type
+   TyBool   :: Type
+   TyChar   :: Type
+   TyStr    :: Type
+   TyVoid   :: Type
+   TyArr    :: Type -> Type
+   TVar     :: Ident -> Type
+   OtherT   :: String -> Type
+   deriving (Show, Eq)
+
+data SType where 
+   Num  :: SType 
+   Text :: SType 
+   None :: SType 
+   deriving Show
+
+
+
 data Error where 
    ParseError :: ParseError -> Error
    TypeError :: TypeError -> Error 
@@ -101,9 +120,12 @@ data ParseError where
    deriving Show
 
 data TypeError where 
-   TypeMismatch :: Type -> Type -> TypeError
-   UndefinedVar :: Ident -> TypeError
-   DuplicateVar :: Ident -> TypeError
+   TypeMismatch  :: Type -> Type -> TypeError
+   STypeMismatch :: Type -> SType -> TypeError
+   UndefinedVar  :: Ident -> TypeError
+   DuplicateVar  :: Ident -> TypeError
+   MainType      :: Ident -> Type -> TypeError
+   MainArgs      :: Ident -> [Args] -> TypeError
    deriving Show
 
 data ConvertError where 

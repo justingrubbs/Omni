@@ -1,2 +1,7 @@
-x = 'c'
-x = "Squirrel"
+def main():
+   x = "Squirrel"
+   x = 'c'
+   x = 'squirrel'
+   x = ""
+   x = ''
+   

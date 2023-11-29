@@ -5,7 +5,7 @@ def main():
    x = [True,False]
    x = y = z = False
    x = True
-   A = "y"
+   A = 'y'
    x = 3 / 10 - 7 + 5
    x = True
    x = 3 <= 4
@@ -18,7 +18,7 @@ def main():
          if 4 == 4:
             x = 1000
       x = False
-      x = "Wrong"
+      x = 'Wrong'
    if 2 == 2:
       x = False
       x = True

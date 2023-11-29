@@ -12,9 +12,11 @@ def coolMath():
 	x = 200
 	y = 10
 	z = True
+	A = 0
 	if z:
-		a = add(x,y)
-		a += 1
+		x = x + 1
+		y = y + 1
+		A = add(x,y)
 	return a
 
 main()

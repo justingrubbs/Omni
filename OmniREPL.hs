@@ -3,12 +3,16 @@
 module Main where
 
 
+
+
 import            Omni.Data
 import            Omni.Python.Syntax         (pyParse, checkPyParse)
 import            Omni.Python.Pretty         (printPython) 
 import            Omni.Java.Syntax           (javaParse, checkJavaParse)
 import            Omni.Java.Pretty           (printJava)
-import            Omni.Typecheck.Inference   (checkProg, Contexts)
+
+import            Omni.Typecheck.Data    
+import            Omni.Typecheck.Elaborate   (checkProg)
 import            System.Console.Haskeline
 import qualified  Data.Map                   as M
 import            Control.Monad.State 
@@ -73,9 +77,12 @@ omniREPL = do
                         in case x of 
                            ":toPyth" -> toPy   f (readFile ("TestFiles/" ++ f)) >> return True
                            ":toJava" -> toJava f (readFile ("TestFiles/" ++ f)) >> return True
+                           "p" -> toPy   f (readFile ("TestFiles/" ++ f)) >> return True
+                           "j" -> toJava f (readFile ("TestFiles/" ++ f)) >> return True
                            ":parse"  ->
                               let (fName, ext) = stripExtension "" f
                               in liftIO $ parseCheck (extToLang ext) f          >> return True -- Will be removed at some point
+                           ":large"  -> toTest (read f)                         >> return True
                            _           -> lift (outputStrLn ("Error: " ++ s))   >> return True
                   when shouldLoop loop
 
@@ -138,6 +145,25 @@ toJava s txt =
                                  }
                      )
                javaSave fName f
+
+toTest :: Int -> OmniM ()
+toTest i = 
+   case testTranslate i "" "0" of
+      Left  err -> error $ show err
+      Right f   -> testSave f
+
+testTranslate :: Int -> String -> String -> Either Error String 
+testTranslate 0 str x = Right $ "def main():\n" ++ str 
+testTranslate i str x = do 
+   let x' = '[' : x ++ "]"
+   let x'' = "\n\tx = " ++ x'
+   testTranslate (i-1) (x'' ++ str) x'
+
+testSave :: String -> OmniM ()
+testSave f = do
+   liftIO $ maybe (return ()) (writeFile "TestFiles/large.py") (Just f)
+   lift $ outputStrLn "The file has been successfully created: \
+   \large.py"
 
 translate :: String -> String -> Lang -> Lang -> Either Error String
 translate txt name lang new = do

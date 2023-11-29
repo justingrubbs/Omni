@@ -28,15 +28,19 @@ public class test {
 		if (2 == 2) {
 			B = false;
 			B = true;
-		} else if (3 == 2) {
-			B = true;
-			B = false;
-		} else if (2 == 100) {
-			B = true;
-			B = false;
 		} else {
-			B = false;
-			B = true;
+			if (3 == 2) {
+				B = true;
+				B = false;
+			} else {
+				if (2 == 100) {
+					B = true;
+					B = false;
+				} else {
+					B = true;
+					B = false;
+				}
+			}
 		}
 	}
 }

@@ -1,10 +1,7 @@
 
 
-module Omni.Typecheck.Inference
-   (
-      checkProg
-   ,  Contexts
-   )
+module Deprecated.Inference
+   ()
    where
 
 
@@ -94,6 +91,7 @@ getVars (Array x)      = Array <$> mapM getVars x
 getVars (ArrayA x ty)  = do 
    arr <- mapM getVars x 
    return $ ArrayA arr ty
+getVars (Call v e)     = Call v <$> mapM getVars e
 getVars (Output e)     = Output <$> getVars e
 getVars x              = return x
 
@@ -110,9 +108,12 @@ base26 = do
          where
             base = length eng
             f 0 = []
-            f x =
-               let (q, r) = (x - 1) `divMod` base
-               in (eng !! r) : f q
+            f x = 
+               if i < 26 
+               then let (q, r) = x `divMod` base
+                  in (eng !! r) : f q
+               else let (q, r) = (x - 1) `divMod` base
+                  in (eng !! r) : f q
 
 genVar :: Contexts Ident
 genVar = do
@@ -131,49 +132,53 @@ getVar v = Data.Maybe.fromMaybe v . M.lookup v <$> askV
 checkProg :: Prog -> Either TypeError Prog
 checkProg p = do
    (prog, _) <- runEnv (M.empty, M.empty, M.empty) 0 (elabProg p [])
-   -- trace (show prog) $ pure ()
    Right $ reverse prog
 
-elabProg :: Prog -> Prog -> Contexts Prog 
-elabProg [] prog = return prog 
-elabProg (s:rest) prog = do 
-   p <- elabStmt [s] []
-   p' <- mapM getExpr p
-   elabProg rest (p' ++ prog)
-
--- I considered making this `elabStmt :: Stmt -> Contexts Stmt` so that I could use map with it instead of manual recursing through
+-- I considered making this `elabProg :: Stmt -> Contexts Stmt` so that I could use map with it instead of manual recursing through
    -- Decided against it because there would be cases in which I need to split a statement into two statements
-elabStmt :: Prog -> Prog -> Contexts Prog
-elabStmt [] prog = return prog
-elabStmt (Assign x e : rest) prog = do
-   ty <- infer e
-   case e of 
-      Array arr -> elabAssign (Assign x (ArrayA arr ty) : rest) prog ty (Declare ty [] (Just e)) (Assign [] (ArrayA arr ty))
-      _         -> elabAssign (Assign x e : rest) prog ty (Declare ty [] (Just e)) (Assign [] e) 
-elabStmt (AugAssign v a e : rest) prog = do 
-   ty <- infer e
-   elabAugAssign (AugAssign v a e : rest) prog ty
-elabStmt (Block p : rest) prog    = elabBlock (Block p) []
-elabStmt (IfThen e s : rest) prog = do
-   s' <- elabStmt [s] []
+elabProg :: Prog -> Prog -> Contexts Prog
+elabProg []                  prog = return prog
+elabProg (Assign x e : rest) prog = do
+   e' <- getVars e
+   ty <- infer e'
+   case e' of 
+      Array arr -> elabAssign (Assign x (ArrayA arr ty) : rest) prog ty (Declare ty [] (Just e')) (Assign [] (ArrayA arr ty))
+      _         -> elabAssign (Assign x e' : rest) prog ty (Declare ty [] (Just e')) (Assign [] e') 
+elabProg (AugAssign v a e : rest) prog = do 
+   e' <- getVars e 
+   ty <- infer e' 
+   elabAugAssign (AugAssign v a e' : rest) prog ty
+elabProg (Block s : rest) prog   = do
+   s' <- elabProg s []
+   elabProg rest (Block s' : prog)
+elabProg (IfThen e (Block s) : rest) prog = do
+   e' <- getVars e
+   s' <- elabProg s []
    (prog', new) <- checkScope s' prog []
-   s' <- getExpr $ Block (reverse new)
-   elabStmt rest $ IfThen e s' : prog'
+   elabProg rest (IfThen e' (Block (reverse new)) : prog')
 -- Need to finish this checkScope
-elabStmt (IfElse e s1 s2 : rest) prog = do
-   s1' <- elabStmt [s1] []
-   s2' <- elabStmt [s2] []
-   elabStmt rest $ IfElse e (Block (reverse s1')) (Block (reverse s2')) : prog
-elabStmt (While e s : rest) prog = do
-   s' <- elabStmt [s] []
+elabProg (IfElse e s o : rest) prog = 
+   case s of 
+      Block s1 -> do
+         e' <- getVars e
+         s2 <- elabProg s1 []
+         s3 <- elabProg [o] []
+         case s3 of
+            [x] -> elabProg rest (IfElse e' (Block (reverse s2)) x : prog)
+            _   -> error "oops in elabProg"
+      other    -> error $ "Expected block but found the following instead: " ++ show other
+elabProg (While e (Block s) : rest) prog = do
+   e' <- getVars e
+   s' <- elabProg s []
    (prog', new) <- checkScope s' prog []
-   s' <- getExpr $ Block (reverse new)
-   elabStmt rest $ While e s' : prog'
-elabStmt (FuncDecl v args ty s : rest) prog = do  -- maybe M.empty contexts
-   s' <- elabStmt [s] []
-   s' <- getExpr $ Block (reverse s')
-   elabStmt rest $ FuncDecl v args ty s' : prog
-elabStmt (stmt : rest) prog      = elabStmt rest (stmt : prog)
+   while <- getExpr $ While e' (Block (reverse new))
+   elabProg rest (while : prog')
+elabProg (FuncDecl v args ty (Block s) : rest) prog = do  -- maybe M.empty contexts
+   s' <- elabProg s []
+   elabProg rest (FuncDecl v args ty (Block $ reverse s') : prog)
+elabProg (stmt : rest) prog      = do
+   s' <- getExpr stmt
+   elabProg rest (s' : prog)
 
 -- `elabAssign` is needed for a few reasons:
    -- 1. Languages that allow the types of variables to be mutated require a lot of special effort to transcribe
@@ -181,10 +186,10 @@ elabStmt (stmt : rest) prog      = elabStmt rest (stmt : prog)
    -- 3. More probably but I'm sleepy
 elabAssign :: Prog -> Prog -> Type -> Stmt -> Stmt -> Contexts Prog
 elabAssign (Assign [] e : rest) nProg _ (Declare tyD eD e') (Assign eA e'')
-   | null eD && null eA = elabStmt rest nProg
-   | null eD            = elabStmt rest $ Assign (reverse eA) e'' : nProg
-   | null eA            = elabStmt rest $ Declare tyD (reverse eD) e' : nProg
-   | otherwise          = elabStmt rest $ Declare tyD (reverse eD) e' : Assign (reverse eA) e'' : nProg
+   | null eD && null eA = elabProg rest nProg
+   | null eD            = elabProg rest (Assign (reverse eA) e'' : nProg)
+   | null eA            = elabProg rest (Declare tyD (reverse eD) e' : nProg)
+   | otherwise          = elabProg rest (Declare tyD (reverse eD) e' : Assign (reverse eA) e'' : nProg)
 elabAssign (Assign (x:xs) e : rest) nProg ty da a = do
    ctx <- askC
    case M.lookup x ctx of
@@ -192,7 +197,7 @@ elabAssign (Assign (x:xs) e : rest) nProg ty da a = do
       Nothing -> local (\(ctx, sCtx, vCtx) -> (M.insert x ty ctx, sCtx, vCtx)) 
          $ elabAssign (Assign xs e : rest) nProg ty (addVar da x) a
       Just y  -> elabAssign' (Assign (x:xs) e : rest) nProg ty y da a
-elabAssign other nProg _ _ _ = error "Impossible pattern match failure in elabAssign."
+elabAssign other nProg _ _ _ = elabProg other nProg
 
 elabAssign' :: Prog -> Prog -> Type -> Type -> Stmt -> Stmt -> Contexts Prog
 elabAssign' (Assign (x:xs) e : rest) nProg ty y da a = do 
@@ -233,27 +238,31 @@ elabAugAssign (AugAssign v a e : rest) nProg ty = do
          case M.lookup v vCtx of 
             Nothing -> 
                if ty == x 
-               then elabStmt rest $ AugAssign v a e : nProg
+               then elabProg rest (AugAssign v a e : nProg) 
                else throwError $ TypeMismatch ty x
             Just y  -> elabAugAssign (AugAssign y a e : rest) nProg ty
 elabAugAssign _ _ _ = error "Impossible pattern match fail in elabAugAssign"
 
-elabBlock :: Stmt -> Prog -> Contexts Prog 
-elabBlock (Block []) prog = return prog 
-elabBlock (Block (s:rest)) prog = do 
-   -- s <- getExpr s 
-   s' <- elabStmt [s] []
-   elabBlock (Block rest) (s' ++ prog)
-elabBlock _ _ = error "Impossible pattern match fail in elabBlock."
-
 checkScope :: Prog -> Prog -> Prog -> Contexts (Prog, Prog) 
-checkScope [] prog new = return (prog, reverse new)
+checkScope []                    prog new = return (prog, reverse new)
 checkScope (Declare ty v e:rest) prog new = case e of 
    Nothing -> checkScope rest (Declare ty v e : prog) new 
    Just e' -> case e' of 
-      Array arr -> checkScope rest (Declare ty v Nothing : prog) (Assign v (ArrayA arr ty) : new)
-      _         -> checkScope rest (Declare ty v Nothing : prog) (Assign v e' : new)
-checkScope (s:rest) prog new = checkScope rest prog (s:new)
+      Array arr -> checkScope rest (Declare ty v (Just $ Lit $ baseValue ty) : prog) (Assign v (ArrayA arr ty) : new)
+      _         -> checkScope rest (Declare ty v (Just $ Lit $ baseValue ty) : prog) (Assign v e' : new)
+checkScope (s:rest)              prog new = checkScope rest prog (s:new)
+
+baseValue :: Type -> Literal 
+baseValue TyInt      = Int 0
+baseValue TyFloat    = Float 0
+baseValue TyDouble   = Double 0 
+baseValue TyBool     = Bool True 
+baseValue TyChar     = Char ' '
+baseValue TyStr      = Str ""
+baseValue (TyArr x)  = Null 
+baseValue Poly       = Null
+baseValue (OtherT t) = error $ "Bad type: " ++ show t
+baseValue rest       = error $ "Unmatched pattern in baseValue: " ++ show rest
 
 addVar :: Stmt -> Ident -> Stmt
 addVar (Declare ty x (Just e)) var = Declare ty (var : x) (Just e)
@@ -302,7 +311,8 @@ infer (Bin op e1 e2)   = do
          TyStr -> return TyStr 
          _     -> do 
             e2' <- infer e2 
-            throwError $ TypeMismatch e1' e2'
+            error $ show $ Bin op e1 e2
+            -- throwError $ TypeMismatch e1' e2'
       x   -> check e1 TyInt $> TyInt
 infer (Un op e)        =
    case op of
@@ -340,5 +350,6 @@ check e ty = do
    ty' <- infer e
    if ty == ty'
    then return ()
-   else throwError $ TypeMismatch ty ty'
+   else error $ show e
+      -- throwError $ TypeMismatch ty ty'
 

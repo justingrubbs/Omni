@@ -12,7 +12,7 @@ def main():
    x = 'c'
 
    a = True
-   while a == True:
+   while a:
       a = [[True]]
    print(a)
 
@@ -35,3 +35,6 @@ def main():
       print("Python has values - `if 1:` == `if True:`")
 
    x = []
+
+# def testyTest(q):
+#    return q

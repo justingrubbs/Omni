@@ -94,6 +94,7 @@ getVars (Array x)      = Array <$> mapM getVars x
 getVars (ArrayA x ty)  = do 
    arr <- mapM getVars x 
    return $ ArrayA arr ty
+getVars (Call v e)     = Call v <$> mapM getVars e
 getVars (Output e)     = Output <$> getVars e
 getVars x              = return x
 
@@ -110,9 +111,12 @@ base26 = do
          where
             base = length eng
             f 0 = []
-            f x =
-               let (q, r) = (x - 1) `divMod` base
-               in (eng !! r) : f q
+            f x = 
+               if i < 26 
+               then let (q, r) = x `divMod` base
+                  in (eng !! r) : f q
+               else let (q, r) = (x - 1) `divMod` base
+                  in (eng !! r) : f q
 
 genVar :: Contexts Ident
 genVar = do
@@ -131,7 +135,6 @@ getVar v = Data.Maybe.fromMaybe v . M.lookup v <$> askV
 checkProg :: Prog -> Either TypeError Prog
 checkProg p = do
    (prog, _) <- runEnv (M.empty, M.empty, M.empty) 0 (elabProg p [])
-   -- trace (show prog) $ pure ()
    Right $ reverse prog
 
 -- I considered making this `elabProg :: Stmt -> Contexts Stmt` so that I could use map with it instead of manual recursing through
@@ -159,7 +162,7 @@ elabProg (IfThen e (Block s) : rest) prog = do
 -- Need to finish this checkScope
 elabProg (IfElse e s o : rest) prog = 
    case s of 
-      Block s1 ->  do
+      Block s1 -> do
          e' <- getVars e
          s2 <- elabProg s1 []
          s3 <- elabProg [o] []
@@ -244,13 +247,25 @@ elabAugAssign (AugAssign v a e : rest) nProg ty = do
 elabAugAssign _ _ _ = error "Impossible pattern match fail in elabAugAssign"
 
 checkScope :: Prog -> Prog -> Prog -> Contexts (Prog, Prog) 
-checkScope [] prog new = return (prog, reverse new)
+checkScope []                    prog new = return (prog, reverse new)
 checkScope (Declare ty v e:rest) prog new = case e of 
    Nothing -> checkScope rest (Declare ty v e : prog) new 
    Just e' -> case e' of 
-      Array arr -> checkScope rest (Declare ty v Nothing : prog) (Assign v (ArrayA arr ty) : new)
-      _         -> checkScope rest (Declare ty v Nothing : prog) (Assign v e' : new)
-checkScope (s:rest) prog new = checkScope rest prog (s:new)
+      Array arr -> checkScope rest (Declare ty v (Just $ Lit $ baseValue ty) : prog) (Assign v (ArrayA arr ty) : new)
+      _         -> checkScope rest (Declare ty v (Just $ Lit $ baseValue ty) : prog) (Assign v e' : new)
+checkScope (s:rest)              prog new = checkScope rest prog (s:new)
+
+baseValue :: Type -> Literal 
+baseValue TyInt      = Int 0
+baseValue TyFloat    = Float 0
+baseValue TyDouble   = Double 0 
+baseValue TyBool     = Bool True 
+baseValue TyChar     = Char ' '
+baseValue TyStr      = Str ""
+baseValue (TyArr x)  = Null 
+baseValue Poly       = Null
+baseValue (OtherT t) = error $ "Bad type: " ++ show t
+baseValue rest       = error $ "Unmatched pattern in baseValue: " ++ show rest
 
 addVar :: Stmt -> Ident -> Stmt
 addVar (Declare ty x (Just e)) var = Declare ty (var : x) (Just e)
@@ -299,7 +314,8 @@ infer (Bin op e1 e2)   = do
          TyStr -> return TyStr 
          _     -> do 
             e2' <- infer e2 
-            throwError $ TypeMismatch e1' e2'
+            error $ show $ Bin op e1 e2
+            -- throwError $ TypeMismatch e1' e2'
       x   -> check e1 TyInt $> TyInt
 infer (Un op e)        =
    case op of
@@ -337,5 +353,6 @@ check e ty = do
    ty' <- infer e
    if ty == ty'
    then return ()
-   else throwError $ TypeMismatch ty ty'
+   else error $ show e
+      -- throwError $ TypeMismatch ty ty'
 

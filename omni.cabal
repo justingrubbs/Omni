@@ -22,6 +22,8 @@ executable omni
                         Omni.Python.Pretty,
                         Omni.Java.Syntax,
                         Omni.Java.Pretty,
+                        Omni.Typecheck.Data, 
+                        Omni.Typecheck.Elaborate,
                         Omni.Typecheck.Inference,
                         Omni.Typecheck.Constraints
     -- other-extensions:   

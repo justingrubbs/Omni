@@ -1,14 +1,30 @@
 def main():
+   x = False 
+   if x:
+      if x:
+         x = False
+         x = "squirrel"
+   print(x)
    x = True 
-   if True:
-      x = [3]
-   if True:
-      x = [[3]]
-   if True:
-      x = [[[3]]]
-   if True:
-      x = [[[[3]]]]
-
-   if True:
+   if x:
+      x = False
+      x = True
       x = [False]
-   x = "squirrel"
+
+   if True: 
+      x = [[False, True]]
+      x = 12
+
+   # if False:
+   #    x = 35
+   #    x = [[3]]
+   # elif False:
+   #    x = [[12,3]]
+   #    x = "Squirrel"
+   # else:
+   #    x = "Else"
+   #    x = ["S q u i r r e l"]
+
+   # print(x)
+
+main()

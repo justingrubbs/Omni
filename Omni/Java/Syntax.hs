@@ -163,7 +163,11 @@ convertVarDecl (S.VarDecl (S.VarDeclArray x) y) ty =
    let x' = checkVarDecl x
    in case y of
          Nothing -> Declare ty [x'] Nothing
-         Just z  -> Declare ty [x'] (Just (convertVarInit z))
+         Just z  -> do 
+            let z' = convertVarInit z 
+            case z' of 
+               Lit Null -> Block []
+               _ -> Declare ty [x'] (Just z')
 
 convertVarDecl2 :: S.VarDecl -> Ident
 convertVarDecl2 (S.VarDecl (S.VarId x) y)        = convertIdent x
@@ -205,6 +209,7 @@ convertLit (S.Int i)     = Int i
 convertLit (S.Boolean b) = Bool b
 convertLit (S.Char c)    = Char c
 convertLit (S.String s)  = Str s
+convertLit S.Null        = Null
 convertLit rest          = OtherL (prettyPrint rest)
 
 convertMethodInvocation :: S.MethodInvocation -> Expr 

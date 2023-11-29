@@ -75,20 +75,11 @@ printStmt i (While e s)           = do
    stmt <- printStmt (i+1) s
    Right ("while (" ++ expr ++ ") {" ++ stmt ++ "\n" ++ tab i ++ "}")
 printStmt i (Block s)             = prettyJava i "" s
-printStmt i (FuncDecl ident args ty s) = 
-   case ident of 
-      "main" -> 
-         case args of 
-            [] -> do 
-               s <- printStmt (i+1) s 
-               Right $ "public static void " ++ ident ++ "(String[] args) {" ++ s ++ "\n" ++ tab i ++ "}"
-            -- Actually quite weird, not sure how I want this to be handled. 
-            _  -> undefined
-      _      -> do 
-         args <- printArgs args ""
-         ty <- printType ty 
-         s <- printStmt (i+1) s 
-         Right ("public static " ++ ty ++ " " ++ ident ++ "(" ++ args ++ ") {" ++ s ++ "\n" ++ tab i ++ "}")
+printStmt i (FuncDecl ident args ty s) = do
+   args <- printArgs args ""
+   ty <- printType ty 
+   s <- printStmt (i+1) s 
+   Right ("public static " ++ ty ++ " " ++ ident ++ "(" ++ args ++ ") {" ++ s ++ "\n" ++ tab i ++ "}")
 printStmt i (ExprStmt e)          = do 
    expr <- printExpr e
    Right expr
@@ -188,13 +179,13 @@ printExpr (OtherE e)    = Left (BadExpr (OtherE e))
 
 printLit :: Literal -> Either PrettyError String
 printLit (Int n)       = Right (show n)
-printLit (Float f)     = Right (show f)
+printLit (Float f)     = Right $ show f ++ "f"
 printLit (Double d)    = Right (show d)
 printLit (Bool True)   = Right "true"
 printLit (Bool False)  = Right "false"
-printLit (Char c)      = Right $ show "sfioewofjoejf'ej'fiwjeifjwe'fj'jaepi jfpdszjc'xjdj'cjv"
-printLit (Str [s])     = Right $ show "sfioewofjoejf'ej'fiwjeifjwe'fj'jaepi jfpdszjc'xjdj'cjv"
-printLit (Str s)       = Right s
+printLit (Char c)      = Right $ show c
+printLit (Str s)       = Right $ show s
+printLit Null          = Right "null"
 printLit (OtherL l)    = Left (BadLit (OtherL l))
 -- printLit e            = Left (Misc ("Pattern not matched in printLit: " ++ show e))
 

@@ -147,6 +147,7 @@ printLit (Bool False) = Right "False"
 printLit (Char c)     = Right (show c)
 printLit (Str s)      = Right $ show s
 printLit (Double d)   = Left (BadLit (Double d))
+printLit Null         = Right "None"
 printLit (OtherL l)   = Left (BadLit (OtherL l))
 -- Eventually will be used to catch all the bad conversions, but want to be alerted when pattern isn't matched for now
 -- printLit rest         = Left (BadLit rest)
