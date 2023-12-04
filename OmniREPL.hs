@@ -3,8 +3,6 @@
 module Main where
 
 
-
-
 import            Omni.Data
 import            Omni.Python.Syntax         (pyParse, checkPyParse)
 import            Omni.Python.Pretty         (printPython) 
@@ -75,8 +73,8 @@ omniREPL = do
                         then lift (outputStrLn "Invalid input") >> return True
                         else let (f:rest') = rest
                         in case x of 
-                           ":toPyth" -> toPy   f (readFile ("TestFiles/" ++ f)) >> return True
-                           ":toJava" -> toJava f (readFile ("TestFiles/" ++ f)) >> return True
+                           ":toPyth" -> toPy   f (readFile f) >> return True
+                           ":toJava" -> toJava f (readFile f) >> return True
                            "p" -> toPy   f (readFile ("TestFiles/" ++ f)) >> return True
                            "j" -> toJava f (readFile ("TestFiles/" ++ f)) >> return True
                            ":parse"  ->

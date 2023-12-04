@@ -3,6 +3,9 @@
 module Omni.Data where
 
 
+import qualified Data.Map as M
+
+
 type Prog = [Stmt]
 type Ident = String
 
@@ -21,19 +24,15 @@ data Stmt where
    IfElse    :: Expr -> Stmt -> Stmt -> Stmt 
    While     :: Expr -> Stmt -> Stmt 
 -- For       :: Stmt
-   FuncDecl  :: Ident -> [Args] -> Type -> Stmt -> Stmt
+   FunDecl   :: Ident -> [Args] -> Type -> Stmt -> Stmt
    ExprStmt  :: Expr -> Stmt
    Return    :: Maybe Expr -> Stmt
    OtherS    :: String -> Stmt
-   deriving Show 
+   deriving (Show,Eq) 
 
 data Args where 
    Args :: Type -> Ident -> Args 
-   deriving Show
-
-
-
-
+   deriving (Show,Eq)
 
 data Expr where 
    Lit    :: Literal -> Expr
@@ -46,7 +45,7 @@ data Expr where
    Call   :: [Ident] -> [Expr] -> Expr
    Output :: Expr -> Expr 
    OtherE :: String -> Expr
-   deriving Show
+   deriving (Show,Eq)
 
 data Literal where 
    Int    :: Integer -> Literal 
@@ -57,7 +56,7 @@ data Literal where
    Str    :: String -> Literal 
    Null   :: Literal
    OtherL :: String -> Literal
-   deriving Show
+   deriving (Show, Eq)
 
 -- https://www.w3schools.com/python/python_operators.asp
 -- https://www.w3schools.com/java/java_operators.asp
@@ -96,6 +95,7 @@ data Type where
    TyStr    :: Type
    TyVoid   :: Type
    TyArr    :: Type -> Type
+   TyArgs   :: [Type] -> Type
    TVar     :: Ident -> Type
    OtherT   :: String -> Type
    deriving (Show, Eq)
@@ -120,12 +120,15 @@ data ParseError where
    deriving Show
 
 data TypeError where 
-   TypeMismatch  :: Type -> Type -> TypeError
-   STypeMismatch :: Type -> SType -> TypeError
-   UndefinedVar  :: Ident -> TypeError
-   DuplicateVar  :: Ident -> TypeError
-   MainType      :: Ident -> Type -> TypeError
-   MainArgs      :: Ident -> [Args] -> TypeError
+   TypeMismatch  :: Type -> Type -> Env -> TypeError
+   STypeMismatch :: Type -> SType -> Env -> TypeError
+   UndefinedVar  :: Ident -> Env -> TypeError
+   DuplicateVar  :: Ident -> Env -> TypeError
+   BadVoid       :: Expr -> Env -> TypeError
+   VoidArray     :: String -> Env -> TypeError
+   UndefinedFun  :: Ident -> Env -> TypeError
+   MainType      :: Ident -> Type -> Env -> TypeError
+   MainArgs      :: Ident -> [Args] -> Env -> TypeError
    deriving Show
 
 data ConvertError where 
@@ -146,4 +149,24 @@ data PrettyError where
 data Constraint where 
    Stuff :: Constraint 
    deriving Show
+
+
+
+
+
+-- Context that maps variables to their types
+type Ctx  = M.Map Ident Type
+
+-- Context that maps variables to an array containing their shadowed variables
+type SCtx = M.Map Ident [Ident]
+
+-- Context that maps source variables to the current generated variable (or Nothing if the source variable is current)
+type VCtx = M.Map Ident Ident
+
+type Env  = (Ctx, SCtx, VCtx)
+
+
+
+
+
 

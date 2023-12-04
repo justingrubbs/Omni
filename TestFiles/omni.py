@@ -8,15 +8,16 @@ def mul(x,y):
 	return x * y
 
 def coolMath():
-	a = 0
-	x = 200
-	y = 10
-	z = True
-	A = 0
-	if z:
-		x = x + 1
+	x = 0
+	y = 200 
+	z = 10
+	z = True 
+	z = 0
+	if True:
+		x = x+1
 		y = y + 1
-		A = add(x,y)
+	z = add(x,y)
+	a = mul(z,z)
 	return a
 
 main()

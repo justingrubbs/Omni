@@ -56,7 +56,7 @@ convertStmt (PC.Conditional ((e,s):sz) x y)
 convertStmt (PC.While e s [] _) 
    = While  (convertExpr e) (Block (map convertStmt s))
 convertStmt (PC.Fun v para _ s _) 
-   = FuncDecl (convertIdent v) (map convertParam para) Poly (Block (map convertStmt s))
+   = FunDecl (convertIdent v) (map convertParam para) Poly (Block (map convertStmt s))
 convertStmt (PC.Return e _) 
    = case e of
       Nothing  -> Return Nothing
@@ -88,6 +88,7 @@ convertExpr (PC.Call e a _)          =
          let (a':_) = a 
          in Output (convertArg a')
       _           -> Call (convertEIdent [e] []) (map convertArg a)
+convertExpr (PC.None _)              = Lit Null
 convertExpr rest                     = OtherE (T.prettyText rest)
 
 

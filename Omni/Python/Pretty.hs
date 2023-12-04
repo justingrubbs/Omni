@@ -69,7 +69,7 @@ printStmt i (Block (s:rest))      = do
    stmt1 <- printStmt i s
    stmt2 <- printStmt i (Block rest)
    Right (stmt1 ++ "\n" ++ stmt2)
-printStmt _ (FuncDecl v a ty s)   = do
+printStmt _ (FunDecl v a ty s)    = do
    stmt <- printStmt 1 s
    Right ("def " ++ v ++ "(" ++ reverse (printArgs a "") ++ "):\n" ++ stmt ++ "\n")
 printStmt i (ExprStmt e)          = do 
@@ -138,6 +138,7 @@ printExpr (Output e)          = do
    expr <- printExpr e
    Right ("print(" ++ expr ++ ")")
 printExpr (OtherE e)          = Left (BadExpr (OtherE e))
+printExpr other               = Left (BadExpr other)
 
 printLit :: Literal -> Either PrettyError String
 printLit (Int n)      = Right (show n)
@@ -147,7 +148,7 @@ printLit (Bool False) = Right "False"
 printLit (Char c)     = Right (show c)
 printLit (Str s)      = Right $ show s
 printLit (Double d)   = Left (BadLit (Double d))
-printLit Null         = Right "None"
+printLit Null         = Right "null"
 printLit (OtherL l)   = Left (BadLit (OtherL l))
 -- Eventually will be used to catch all the bad conversions, but want to be alerted when pattern isn't matched for now
 -- printLit rest         = Left (BadLit rest)

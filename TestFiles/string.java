@@ -1,10 +1,9 @@
 package TestFiles;
 public class string {
 	public static void main(String[] args) {
-		String x = "Squirrel";
-		x = "c";
-		x = "squirrel";
-		x = "";
-		x = "";
+		int x = 12;
+		boolean C = true;
+		String D = "Squirrel";
+		x = 4;
 	}
 }
