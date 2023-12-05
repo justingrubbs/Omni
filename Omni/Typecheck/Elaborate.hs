@@ -51,30 +51,27 @@ prepFuncs (FunDecl v a ty s : rest) prog = do
    putStmt v (FunDecl v a ty s)
    putEnv v empty
    prepFuncs rest (FunDecl v a ty s : prog)
-prepFuncs (stmt : rest)              prog = prepFuncs rest (stmt : prog)
+prepFuncs (stmt : rest)             prog = prepFuncs rest (stmt : prog)
 
 elabProg :: Bool -> Prog -> Prog -> Contexts Prog
 elabProg b    []                        prog = return prog  -- Successful elaboration
-elabProg True (FunDecl v a ty s : rest) prog = do 
-   stmt <- getStmt v
-   env <- ask
-   (sProg,fEnv) <- elabStmt stmt
-   -- putEnv v fEnv
-   local (const env) $ elabProg True rest (sProg ++ prog)
+elabProg True (FunDecl v a ty s : rest) prog = do
+   env <- getEnv v
+   -- (sProg,fEnv) <- local (const env) $ elabStmt $ FunDecl v a ty s
+   (sProg,fEnv) <- elabStmt $ FunDecl v a ty s
+   elabProg True rest (sProg ++ prog)
 elabProg b    (FunDecl v a ty s : rest) prog = do
-   stmt <- getStmt v
-   env <- ask
-   (sProg,fEnv) <- elabStmt stmt `catchError` (\te -> return ([stmt],stripError te))
-   -- putEnv v fEnv
-   local (const env) $ elabProg b rest (sProg ++ prog)
+   env <- getEnv v
+   -- (sProg,fEnv) <- local (const env) $ elabStmt (FunDecl v a ty s) `catchError` (\te -> return ([FunDecl v a ty s],stripError te))
+   (sProg,fEnv) <- elabStmt (FunDecl v a ty s) `catchError` (\te -> return ([FunDecl v a ty s],stripError te))
+   elabProg b rest (sProg ++ prog)
 elabProg b    (s:rest)                  prog = do
    (sProg, env) <- elabStmt s
-   local (const env) $ elabProg b rest (sProg ++ prog)
+   elabProg b rest (sProg ++ prog)
 
 elabStmt :: Stmt -> Contexts (Prog,Env)
 elabStmt stmt = do
    s' <- getExpr stmt
-   -- trace ("\n" ++ show s') $ pure ()
    checkStmt s' *> elabStmt' s'
 
 elabStmt' :: Stmt -> Contexts (Prog, Env)
@@ -90,30 +87,36 @@ elabStmt' (AugAssign v a e)  = do
    elabAugAssign (AugAssign v a expr) ty
 elabStmt' (Declare ty v e)   = case e of
    Nothing -> do end [Declare ty v e]
-   Just e' -> do 
+   Just e' -> do
       expr <- elabExpr e'
       eTy <- infer expr
       end [Declare eTy v (Just expr)]
 elabStmt' (Block p)          = elabBlock p []
-elabStmt' (IfThen e s)       = do 
-   expr <- elabExpr e 
+elabStmt' (IfThen e s)       = do
+   expr <- elabExpr e
    elabIfThen (IfThen expr s)
-elabStmt' (IfElse e s1 s2)   = do 
-   expr <- elabExpr e 
+elabStmt' (IfElse e s1 s2)   = do
+   expr <- elabExpr e
    elabIfElse (IfElse expr s1 s2)
-elabStmt' (While e s)        = do 
-   expr <- elabExpr e 
+elabStmt' (While e s)        = do
+   expr <- elabExpr e
    elabWhile (While expr s)
-elabStmt' (FunDecl v a ty s) = do
-   stmt <- getStmt v
+elabStmt' (FunDecl v [] ty s) = do 
    env <- getEnv v 
-   elabFunDecl stmt
+   stmt <- getStmt v 
+   local (const env) $ elabFunDecl stmt
+elabStmt' (FunDecl v a ty s) = do 
+   stmt <- getStmt v
+   end [stmt]
 elabStmt' (ExprStmt e)      = do
+   vCtx <- askV
+   trace (show $ ExprStmt e) $ pure ()
+   trace (show vCtx) $ pure ()
    expr <- elabExpr e
    end [ExprStmt expr]
-elabStmt' (Return e)        = case e of 
+elabStmt' (Return e)        = case e of
    Nothing -> end [Return e]
-   Just e' -> do  
+   Just e' -> do
       expr <- elabExpr e'
       end [Return (Just expr)]
 elabStmt' (OtherS s)         = error $ show s
@@ -136,7 +139,7 @@ elabAssign (Assign (x:rest) e) ty prog (decl, asgn) = do
 elabAssign _ _ _ _ = undefined
 
 elabAssign' :: Stmt -> Type -> Type -> Prog -> (Stmt, Stmt) -> Contexts (Prog, Env)
-elabAssign' (Assign (x:rest) e) ty1 ty2 prog (decl,asgn) 
+elabAssign' (Assign (x:rest) e) ty1 ty2 prog (decl,asgn)
    | ty1 == ty2 = local (\(ctx, sCtx, vCtx) -> (ctx, sCtx, M.delete x vCtx))
       $ elabAssign (Assign rest e) ty1 prog (decl, addVar asgn x)
    | otherwise = do
@@ -250,27 +253,29 @@ baseValue rest       = error $ "Unmatched pattern in baseValue: " ++ show rest
 -- Elaborating functions:
 ---------------------------------------------------------------------
 elabFunDecl :: Stmt -> Contexts (Prog,Env)
-elabFunDecl (FunDecl "main" a ty s) =
+elabFunDecl (FunDecl "main" a t s) =
    if null a
    then do
-      env <- getEnv "main"
-      (sProg,env') <- elabStmt s `catchError` (\te -> return ([s],stripError te))
-      ty' <- local (const env') $ inferStmt (FunDecl "main" a ty (Block sProg))
+      (sProg,env') <- elabStmt s
+      ty <- local (const env') $ inferStmt (FunDecl "main" a t (Block sProg))
       putEnv "main" env'
-      case ty' of
-         TyVoid -> end [FunDecl "main" [Args (TyArr TyStr) "args"] TyVoid (Block $ reverse sProg)]
-         _      -> throwError $ MainType "main" ty' env'
+      case ty of
+         TyVoid -> do 
+            let f = FunDecl "main" [Args (TyArr TyStr) "args"] ty (Block $ reverse sProg)
+            putStmt "main" f
+            end [f]
+         _      -> throwError $ MainType "main" ty env'
    else throwError $ MainArgs "main" a empty
-elabFunDecl (FunDecl v a ty s)     = do
-   env <- getEnv v 
-   (sProg,env') <- elabStmt s `catchError` (\te -> return ([s],stripError te))
-   ty' <- local (const env') $ inferStmt (FunDecl v a ty (Block sProg))
-   putEnv v env'    --- putting env in here, idk if correct
-   putStmt v (FunDecl v a ty' (Block $ reverse sProg))
-   end [FunDecl v a ty' (Block $ reverse sProg)]
+elabFunDecl (FunDecl v a t s)     = do
+   (sProg,env') <- elabStmt s
+   ty <- local (const env') $ inferStmt (FunDecl v a t (Block sProg))
+   let (ctx,sCtx,vCtx) = env' 
+   putEnv v (M.insert v ty ctx, sCtx,vCtx)
+   putStmt v (FunDecl v a ty (Block $ reverse sProg))
+   end [FunDecl v a ty (Block $ reverse sProg)]
 elabFunDecl _ = undefined
 
-stripError :: TypeError -> Env 
+stripError :: TypeError -> Env
 stripError (TypeMismatch t1 t2 env) = env
 stripError (STypeMismatch t1 t2 env) = env
 stripError (UndefinedVar v env) = env
@@ -286,58 +291,61 @@ stripError (MainArgs v a env) = env
 -- Elaborating expressions:
 ---------------------------------------------------------------------
 elabExpr :: Expr -> Contexts Expr
-elabExpr (Call v e) = elabFunCall (Call v e)
+elabExpr (Call v e) = do 
+   env <- getEnv (concat v) 
+   -- local (const env) $ elabFunCall (Call v e)
+   elabFunCall (Call v e)
 elabExpr (Array e)  = elabExpr' (Array e) []
 elabExpr (ArrayA e ty) = elabExpr' (ArrayA e ty) []
-elabExpr (Bin op e1 e2) = do 
-   expr1 <- elabExpr e1 
-   expr2 <- elabExpr e2 
-   return $ Bin op expr1 expr2 
-elabExpr (Un aop e) = do 
-   expr <- elabExpr e 
-   return $ Un aop expr 
-elabExpr (Output e) = do 
-   expr <- elabExpr e 
+elabExpr (Bin op e1 e2) = do
+   expr1 <- elabExpr e1
+   expr2 <- elabExpr e2
+   return $ Bin op expr1 expr2
+elabExpr (Un aop e) = do
+   expr <- elabExpr e
+   return $ Un aop expr
+elabExpr (Output e) = do
+   expr <- elabExpr e
    return $ Output expr
 elabExpr rest       = return rest
 
-elabExpr' :: Expr -> [Expr] -> Contexts Expr 
+elabExpr' :: Expr -> [Expr] -> Contexts Expr
 elabExpr' (Array [])       exprs = return $ Array exprs
-elabExpr' (Array (e:rest)) exprs = do 
-   expr <- elabExpr e 
+elabExpr' (Array (e:rest)) exprs = do
+   expr <- elabExpr e
    elabExpr' (Array rest) (expr : exprs)
-elabExpr' (ArrayA [] ty) exprs = return $ ArrayA exprs ty 
-elabExpr' (ArrayA (e:rest) ty) exprs = do 
-   expr <- elabExpr e 
+elabExpr' (ArrayA [] ty) exprs = return $ ArrayA exprs ty
+elabExpr' (ArrayA (e:rest) ty) exprs = do
+   expr <- elabExpr e
    elabExpr' (ArrayA rest ty) (expr : exprs)
 elabExpr' _ _ = undefined
 
 elabFunCall :: Expr -> Contexts Expr
 elabFunCall (Call ["main"] e) = return $ Call ["main"] e
+elabFunCall (Call v [])       = return $ Call v []
 elabFunCall (Call v e)        = do
    let v' = concat v
    env <- getEnv v'
    args <- getArgs v'
-   argsToCtx env v' e args []
-   env' <- getEnv v'
+   env' <- argsToCtx env v' e args []
    stmt <- getStmt v'
-   let (FunDecl ident a t s) = stmt
-   ty <- local (const env') $ inferStmt stmt 
-   putStmt ident (FunDecl ident a ty s)
+   -- (sProg,env'') <- local (const env') $ elabFunDecl stmt
+   -- let [s] = sProg
+   -- putStmt v' s
+   local (const env') $ elabFunDecl stmt
    return $ Call v e
 elabFunCall _                      = undefined
 
-argsToCtx :: Env -> Ident -> [Expr] -> [Args] -> [Args] -> Contexts ()
+argsToCtx :: Env -> Ident -> [Expr] -> [Args] -> [Args] -> Contexts Env
 argsToCtx env             ident []     []             args = do
    stmt <- getStmt ident
    let (FunDecl v a ty s) = stmt
-   putEnv ident env
-   trace (show env) $ pure ()
    putStmt ident (FunDecl v (reverse args) ty s)
+   return env
 argsToCtx (ctx,sCtx,vCtx) ident (e:es) (Args ty v:as) args = do
    eTy <- infer e
    if ty /= Poly && ty /= eTy
-   then do 
+   then do
       stmt <- getStmt ident
       error $ show stmt ++ "\n\nNeed to make argsToCtx keep trying to see if different type arguments is also valid"
    else argsToCtx (M.insert v eTy ctx,sCtx,vCtx) ident es as (Args eTy v : args)
@@ -381,26 +389,6 @@ getVars (ArrayA x ty)  = do
 getVars (Call v e)     = Call v <$> mapM getVars e
 getVars (Output e)     = Output <$> getVars e
 getVars x              = return x
-
-eng :: String
-eng = ['A'..'Z']  -- Arbitrary letters, is there a more standard way to do this?
-
-base26 :: Contexts String
-base26 = do
-   i <- getI
-   inc i
-   case i of
-      0 -> return [head eng]
-      n -> return $ reverse (f n)
-         where
-            base = length eng
-            f 0 = []
-            f x =
-               if i < 26
-               then let (q, r) = x `divMod` base
-                  in (eng !! r) : f q
-               else let (q, r) = (x - 1) `divMod` base
-                  in (eng !! r) : f q
 
 genVar :: Contexts Ident
 genVar = do

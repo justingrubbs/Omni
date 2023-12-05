@@ -46,7 +46,7 @@ subtype ty None = do
 checkStmt :: Stmt -> Contexts ()
 checkStmt (AugAssign v a e)   = do
    e' <- infer e
-   subtype e' Num
+   subtype e' Num -- This is just wrong? There are other assignment operators that don't operate on numerals
 checkStmt (IfThen e s)        = check e TyBool
 checkStmt (IfElse e s1 s2)    = check e TyBool
 checkStmt (While e s)         = check e TyBool
@@ -60,58 +60,65 @@ checkStmt _                   = return ()
 -- Infer the type of *some* statements
    -- Inference on statements occurs after elaboration
 inferStmt :: Stmt -> Contexts Type
-inferStmt (FunDecl v a ty (Block s))  = inferFuncDecl s Nothing
-inferStmt (ExprStmt (Call v e))       = inferCall (concat v) e
+inferStmt (FunDecl v a ty (Block s))  = inferFuncDecl v s Nothing
+inferStmt (ExprStmt (Call v e))       = infer $ Call v e
 inferStmt rest                        = error $ "Unmatched pattern in inferStmt: " ++ show rest
 
 
 -- Inference on function declarations:
 ---------------------------------------------------------------------
-inferFuncDecl :: Prog -> Maybe Type -> Contexts Type
-inferFuncDecl []       Nothing      = return TyVoid
-inferFuncDecl []       (Just ty)    = return ty
-inferFuncDecl (Return e : rest) mty = do 
+inferFuncDecl :: Ident -> Prog -> Maybe Type -> Contexts Type
+inferFuncDecl ident []       Nothing      = return TyVoid
+inferFuncDecl ident []       (Just ty)    = return ty
+-- inferFuncDecl ident (ExprStmt (Call v e) : rest) mty 
+--    | concat v == ident = inferFuncDecl ident rest mty  
+--    | otherwise = 
+inferFuncDecl ident (Return e : rest) mty = do 
    case e of
-      Nothing -> inferFuncDecl rest mty
-      Just e'  -> do 
+      Nothing -> inferFuncDecl ident rest mty
+      Just e'  -> 
+         -- case e' of 
+         -- Call v exps -> 
+         --    if concat v == ident 
+         --    then inferFuncDecl ident rest mty 
+         --    else case mty of
+         --       Nothing -> do
+         --          eTy <- infer e'
+         --          inferFuncDecl ident rest (Just eTy)
+         --       Just ty -> check e' ty *> inferFuncDecl ident rest mty 
+         -- _                -> 
          case mty of
             Nothing -> do
                eTy <- infer e'
-               inferFuncDecl rest (Just eTy)
-            Just ty -> check e' ty *> inferFuncDecl rest mty
-inferFuncDecl (s:rest) mty          = 
+               inferFuncDecl ident rest (Just eTy)
+            Just ty -> check e' ty *> inferFuncDecl ident rest mty
+-- TEMPORARY - If this works it will be extended and modularized better
+inferFuncDecl ident (s:rest) mty          = 
    case s of 
       Block p -> do 
-         ty <- inferFuncDecl p mty 
+         ty <- inferFuncDecl ident p mty 
          if ty == TyVoid 
-         then inferFuncDecl rest mty
-         else inferFuncDecl rest (Just ty)
+         then inferFuncDecl ident rest mty
+         else inferFuncDecl ident rest (Just ty)
       IfThen e s -> do 
-         ty <- inferFuncDecl [s] mty 
+         ty <- inferFuncDecl ident [s] mty 
          if ty == TyVoid 
-         then inferFuncDecl rest mty
-         else inferFuncDecl rest (Just ty)
+         then inferFuncDecl ident rest mty
+         else inferFuncDecl ident rest (Just ty)
       IfElse e s1 s2 -> do 
-         ty1 <- inferFuncDecl [s1] mty 
+         ty1 <- inferFuncDecl ident [s1] mty 
          if ty1 == TyVoid 
          then do 
-            ty2 <- inferFuncDecl [s2] mty 
+            ty2 <- inferFuncDecl ident [s2] mty 
             if ty2 == TyVoid 
-            then inferFuncDecl rest mty 
-            else inferFuncDecl rest (Just ty2)
+            then inferFuncDecl ident rest mty 
+            else inferFuncDecl ident rest (Just ty2)
          else do 
-            ty2 <- inferFuncDecl rest (Just ty1) 
+            ty2 <- inferFuncDecl ident rest (Just ty1) 
             if ty2 == TyVoid 
-            then inferFuncDecl rest (Just ty1)
-            else inferFuncDecl rest (Just ty1)
-      _ -> inferFuncDecl rest mty
-
-
--- Inference on function calls (failable):
----------------------------------------------------------------------
-inferCall :: Ident -> [Expr] -> Contexts Type 
-inferCall ident []       = return $ TyArgs [] 
-inferCall ident (e:rest) = infer e
+            then inferFuncDecl ident rest (Just ty1)
+            else inferFuncDecl ident rest (Just ty1)
+      _ -> inferFuncDecl ident rest mty
 
 
 -- Inferring the types of expressions:
@@ -169,7 +176,11 @@ infer (Call v [])      = do
    stmt <- getStmt (concat v) 
    let (FunDecl ident a ty s) = stmt 
    return ty
-infer (Call v e)       = inferCall (concat v) e
+infer (Call v e)       = do
+   (ctx,sCtx,vCtx) <- getEnv (concat v)
+   case M.lookup (concat v) ctx of
+      Nothing -> return Poly
+      Just x  -> return x
 infer x                = error $ "The following expression is not yet implemented: " ++ show x -- so this should show the actual expression
 
 inferLit :: Literal -> Contexts Type

@@ -4,44 +4,49 @@ public class test1 {
 		int x = 3;
 		x = 10;
 		int y,z = y = 10;
-		boolean[] H = {true};
-		H = new boolean[] {false,true};
-		boolean I,J,K = J = I = false;
-		I = true;
-		String A = "y";
+		float A = 3.1f;
+		boolean[] B = {true};
+		B = new boolean[] {false,true};
+		boolean C,D,E = D = C = false;
+		C = true;
+		String F = "y";
+		System.out.println(F);
 		x = 3 / 10 - 7 + 5;
-		I = true;
-		I = 3 <= 4;
-		I = 3 > 4;
-		int[] L = {3,2,1};
-		String M = "Test!";
-		M = "Q";
+		C = true;
+		C = 3 <= 4;
+		C = 3 > 4;
+		int[] G = {3,2,1};
+		String H = "Test!";
+		System.out.println(H);
+		H = "Q";
 		if (2 == 2) {
 			if (2 == 2) {
 				if (4 == 4) {
 					x = 1000;
 				}
 			}
-			I = false;
-			M = "Wrong";
+			C = false;
+			H = "Wrong";
 		}
+		System.out.println(H);
 		if (2 == 2) {
-			I = false;
-			I = true;
+			C = false;
+			System.out.println(H);
+			C = true;
+		}
+		if (3 == 2) {
+			C = true;
+			C = false;
 		} else {
-			if (3 == 2) {
-				I = true;
-				I = false;
+			if (2 == 100) {
+				C = true;
+				C = false;
 			} else {
-				if (2 == 100) {
-					I = true;
-					I = false;
-				} else {
-					I = true;
-					I = false;
-				}
+				C = true;
+				C = false;
 			}
 		}
+		System.out.println(C);
 	}
 
 }

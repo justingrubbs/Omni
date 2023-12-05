@@ -22,3 +22,5 @@ def add(x,y):
 def mul(x,y):
    x = 3
    return x*y
+
+main()

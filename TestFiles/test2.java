@@ -17,7 +17,7 @@ public class test2 {
 	}
 
 	public static int add(int x, int y) {
-		z = true;
+		boolean z = true;
 		return x + y;
 	}
 

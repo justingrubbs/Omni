@@ -31,10 +31,6 @@ def main():
 
    print(c)
 
-   if 1:
-      print("Python has values - `if 1:` == `if True:`")
-
-   x = []
 
 # def testyTest(q):
 #    return q
