@@ -67,11 +67,11 @@ convertDecl initDecl         = OtherS (prettyPrint initDecl)
    -- https://www.mygreatlearning.com/blog/polymorphism-in-java/
 convertMemberDecl :: S.MemberDecl -> Stmt -- once implementing functions, change this
 convertMemberDecl (S.MethodDecl _ _ ty (S.Ident "main") p _ _ s) 
-   = FuncDecl "main" [] TyVoid (convertMethodBody s)
+   = FunDecl "main" [] TyVoid (convertMethodBody s)
 convertMemberDecl (S.MethodDecl _ _ ty v                p _ _ s) 
    = case ty of 
-      Nothing -> FuncDecl (convertIdent v) (map convertFormalParam p) TyVoid (convertMethodBody s)
-      Just x  -> FuncDecl (convertIdent v) (map convertFormalParam p) (convertType x) (convertMethodBody s)
+      Nothing -> FunDecl (convertIdent v) (map convertFormalParam p) TyVoid (convertMethodBody s)
+      Just x  -> FunDecl (convertIdent v) (map convertFormalParam p) (convertType x) (convertMethodBody s)
 convertMemberDecl rest 
    = OtherS (prettyPrint rest)
 

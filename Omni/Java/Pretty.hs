@@ -28,8 +28,8 @@ prettyJava i str (x:rest)  =
          prettyJava i (reverse stmt ++ tab i ++ "\n" ++ str) rest
       (IfElse e s1 s2) -> printStmt i (IfElse e s1 s2) >>= \stmt -> 
          prettyJava i (reverse stmt ++ tab i ++ "\n" ++ str) rest
-      (FuncDecl v args ty s) -> printStmt i (FuncDecl v args ty s) >>= \stmt -> 
-         prettyJava i (reverse stmt ++ tab i ++ "\n" ++ str) rest
+      (FunDecl v args ty s) -> printStmt i (FunDecl v args ty s) >>= \stmt -> 
+         prettyJava i ("\n" ++ reverse stmt ++ tab i ++ "\n" ++ str ) rest
       (ExprStmt (Call ["main"] _)) -> prettyJava i str rest  -- bandaid
       _                -> printStmt i x >>= \stmt -> 
          prettyJava i (";" ++ reverse stmt ++ tab i ++ "\n" ++ str) rest
@@ -75,7 +75,7 @@ printStmt i (While e s)           = do
    stmt <- printStmt (i+1) s
    Right ("while (" ++ expr ++ ") {" ++ stmt ++ "\n" ++ tab i ++ "}")
 printStmt i (Block s)             = prettyJava i "" s
-printStmt i (FuncDecl ident args ty s) = do
+printStmt i (FunDecl ident args ty s) = do
    args <- printArgs args ""
    ty <- printType ty 
    s <- printStmt (i+1) s 
@@ -136,6 +136,10 @@ printType Poly       = Right "Poly"
 printType (TVar t)   = Right ("Type variable: " ++ show t)
 printType TyVoid     = Right "void"
 printType (OtherT t) = Left (BadType (OtherT t))
+printType (TyArgs []) = undefined
+printType (TyArgs (t:rest)) = printType t
+
+   
 
 
 -- Expressions:

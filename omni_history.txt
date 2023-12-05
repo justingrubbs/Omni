@@ -1,100 +1,100 @@
 :q
-j elab.py
+j test1.py
+j test1.py
+j test1.py
 :q
-j elab.py
 :q
-j elab.py
+j test1.py
 :q
-j elab.py
-:parse TestFiles/elab.py
-j elab.py
-j elab.py
+j test1.py
+j test1.py
+j test1.py
 :q
-j elab.py
-j elab.py
-j elab.py
+j test1.py
+j test1.py
+j test1.py
 :q
-j Issues/unendingLoop.py
-j Issues/unendingLoop.py
-j conditional.py
+j test2.py
+j test1.py
+j test1.py
+j test1.py
 :q
-j elab.py
-j elab.py
-:parse TestFiles/elab.py
+j test1.py
 :q
-:parse TestFiles/elab.py
-j elab.py
-j elab.py
-j elab.py
-j elab.py
+j test1.py
+j test2.py
+j test3.py
+j test5.py
 :q
-j elab.py
-:q
-j elab.py
-:q
-j elab.py
-:q
-:parse TestFiles/elab.py
-j elab.py
-j elab.py
-:parse TestFiles/elab.py
-:parse TestFiles/elab.py
-j elab.py
-j elab.py
-j elab.py
-:q
-j elab.py
-j elab.py
-j elab.py
-j elab.py
-:q
-j elab.py
-j elab.py
-:q
-j elab.py
-j elab.py
+j test6.py
+j quirks.py
+j quirks.py
+j quirks.py
+j py.py
+j omni.py
+j Issues/conditional.py
+j Issues/new.py
+j example.py
+j example.py
+j example.py
+j example.py
+j example.py
 j example.py
 j func.py
-p monad.java
-j monad.py
-p omni.java
-j omni.py
-p py.java
-j py.py
-j quirks.py
-j quirks.py
-j quirks.py
-j quirks.py
-p scope.java
-j scope.py
-p string.java
-j string.py
-p test.java
-j test.py
+j func.py
+j func.py
+j func.py
+j func.py
 :q
-j elab.py
-j elab.py
-j elab.py
-j elab.py
+j func.py
+j func.py
+j func.py
 :q
-j elab.py
 :q
-j elab.py
-j elab.py
-j elab.py
-j elab.py
-j elab.py
+j func.py
+j func.py
 :q
-j elab.py
-j elab.py
-j elab.py
+j func.py
+j func.py
 :q
-j elab.py
+j func.py
 :q
-j elab.py
-j elab.py
-j elab.py
-j elab.py
+j func.py
 :q
-j elab.py
-j elab.py
+j func.py
+:q
+j func.py
+:q
+j func.py
+:q
+j func.py
+:q
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+j func.py
+:q
+j func.py
+:q
+j func.py
+:q
+j func.py
+:q
+j func.py
+:q
+j func.py
+j func.py
+j func.py
+j func.py
