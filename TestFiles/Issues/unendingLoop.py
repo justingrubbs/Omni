@@ -1,7 +1,7 @@
 def main():
    x = True 
    while x:
-      x = 0
+      x = [0]
       # Loop immediately ceases because x is no longer True 
          # This is the case here, but not necessarily always
          # Python "truthy" values include almost every type I have implemented-ish?

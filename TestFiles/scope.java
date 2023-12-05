@@ -2,27 +2,23 @@ package TestFiles;
 public class scope {
 	public static void main(String[] args) {
 		boolean x = false;
-		String A = "";
 		if (x) {
-			A = "";
 			if (x) {
 				x = false;
-				A = "squirrel";
 			}
 		}
 		System.out.println(x);
 		x = true;
-		boolean[] B = null;
+		boolean[] A = null;
 		if (x) {
 			x = false;
 			x = true;
-			B = new boolean[] {false};
+			A = new boolean[] {false};
 		}
-		int D = 0;
-		boolean[][] C = null;
+		boolean[][] B = null;
 		if (true) {
-			C = new boolean[][] {{false,true}};
-			D = 12;
+			B = new boolean[][] {{true,false}};
 		}
 	}
+
 }

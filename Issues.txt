@@ -1,24 +1,6 @@
- - Python strings have '+' and '*' as valid binary operators
-   - '+' is concatenation
-   - '*' is duplication; the second argument must be an integer
-      -- https://realpython.com/python-strings/
  - Binary operations do not pretty-print parentheses
- - Python allows for `x,y,z = True,3,"Yup"` and `x = y = z = True`
-   -  Also need to allow for assignments like `x += 3`
-   -  New ADT for assignments specifically?
- - Still need to do some type-checking for Java, just no reconstruction, right?
-   - I don't think so?
-
- - The entirety of quirks.py 
- - Inference required on statements as well 
- - Constraint-solving and unification need to be implemented in some capacity 
- - Lot of clean-up necessary before it's a decent project
- - Modularize the REPL translate function better
- - Main function band-aid fix needs to be made more secure
-
-"Static-Type Checking:
-   - Verify safety of program before execution.
-Dynamic Type Checking: 
-   - Verify safety of program at execution."
-
-
+ - Recursion broken
+ - Functions barely implemented, much work needed
+ - Weird issue with an assignment in conditional in test1.py
+ - Probably a significant amount of behaviors are currently possible but should be errored out
+ - Transpiling to Java from a directory is ugly but works-ish

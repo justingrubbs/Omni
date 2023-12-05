@@ -3,7 +3,6 @@ def main():
    if x:
       if x:
          x = False
-         x = "squirrel"
    print(x)
    x = True 
    if x:
@@ -13,7 +12,6 @@ def main():
 
    if True: 
       x = [[False, True]]
-      x = 12
 
    # if False:
    #    x = 35

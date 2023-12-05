@@ -26,10 +26,13 @@ type OCtx = M.Map Ident [Ident]
 
 type Contexts = ReaderT Env (StateT (Count,FCtx,OCtx) (ExceptT TypeError Identity))
 
-runEnv :: Env 
-   -> Count 
-   -> Contexts Prog 
-   -> Either TypeError Prog
+runEnv :: Env -> Count -> Contexts Prog -> Either TypeError Prog
+-- Generated function type - just interesting
+-- runEnv :: r
+--    -> a1
+--    -> ReaderT
+--       r (StateT (a1, M.Map k1 a2, M.Map k2 a3) (ExceptT e Identity)) a4
+--    -> Either e a4
 runEnv env i p = runIdentity $ runExceptT $ evalStateT (runReaderT p env) (i,M.empty,M.empty)
 
 

@@ -20,16 +20,7 @@ import            Control.Monad.Except
 import            Control.Monad.Identity
 
 
--- Python:
-    -- https://docs.python.org/3/reference/grammar.html
-    -- https://www.w3schools.com/python/python_syntax.asp
-    -- https://www.w3schools.com/python/python_ref_keywords.asp
-
--- MegaParsec:
-    -- https://hackage.haskell.org/package/megaparsec
-    -- https://hackage.haskell.org/package/megaparsec-9.5.0#megaparsec-vs-parsec
-    -- https://github.com/mrkkrp/megaparsec-site/blob/master/tutorials/parsing-simple-imperative-language.md
-    -- https://github.com/disco-lang/disco/blob/master/src/Disco/Parser.hs
+-- Much of the general structure and layout of this REPL is derived from a project in CSCI 360 - Programming Languages, taught by Dr. Brent Yorgey
 
 
 data OmniState = QS
@@ -46,8 +37,7 @@ description = "\nWelcome to Omni:\n\n\
    \Commands:\n\
    \  :toPyth [file name]     -- Transcribe a program to Python\n\
    \  :toJava [file name]     -- Transcribe a program to Java\n\
-   \  :quit                   -- Exit\n\
-   \Currently, input files must be located in the `TestFiles` directory.\n"
+   \  :quit                   -- Exit\n"
 
 omniSettings :: Settings IO
 omniSettings = defaultSettings
@@ -63,26 +53,29 @@ omniREPL = do
          minput <- lift $ getInputLine "> "
          case minput of
                Nothing      -> return ()
-               Just s       -> do
-                  let (cmd:rest) = words s
-                  shouldLoop <- case cmd of
-                     ":q"        -> return False
-                     ":quit"     -> return False
-                     x           -> 
-                        if null rest || length rest > 1
-                        then lift (outputStrLn "Invalid input") >> return True
-                        else let (f:rest') = rest
-                        in case x of 
-                           ":toPyth" -> toPy   f (readFile f) >> return True
-                           ":toJava" -> toJava f (readFile f) >> return True
-                           "p" -> toPy   f (readFile ("TestFiles/" ++ f)) >> return True
-                           "j" -> toJava f (readFile ("TestFiles/" ++ f)) >> return True
-                           ":parse"  ->
-                              let (fName, ext) = stripExtension "" f
-                              in liftIO $ parseCheck (extToLang ext) f          >> return True -- Will be removed at some point
-                           ":large"  -> toTest (read f)                         >> return True
-                           _           -> lift (outputStrLn ("Error: " ++ s))   >> return True
-                  when shouldLoop loop
+               Just s       -> 
+                  case s of 
+                     "" -> lift (outputStrLn "Invalid input") >> when True loop
+                     _  -> do
+                        let (cmd:rest) = words s
+                        shouldLoop <- case cmd of
+                           ":q"        -> return False
+                           ":quit"     -> return False
+                           x           -> 
+                              if null rest || length rest > 1
+                              then lift (outputStrLn "Invalid input") >> return True
+                              else let (f:rest') = rest
+                              in case x of 
+                                 ":toPyth" -> toPy   f (readFile f) >> return True
+                                 ":toJava" -> toJava f (readFile f) >> return True
+                                 -- "p" -> toPy   f (readFile ("TestFiles/" ++ f)) >> return True
+                                 -- "j" -> toJava f (readFile ("TestFiles/" ++ f)) >> return True
+                                 -- ":parse"  ->
+                                    -- let (fName, ext) = stripExtension "" f
+                                    -- in liftIO $ parseCheck (extToLang ext) f          >> return True
+                                 -- ":large"  -> toTest (read f)                         >> return True
+                                 _           -> lift (outputStrLn ("Error: " ++ s))   >> return True
+                        when shouldLoop loop
 
 stripExtension :: String -> String -> (String, String)
 stripExtension f []     = (f, [])
@@ -91,17 +84,15 @@ stripExtension f (x:xs) =
       '.' -> (f, xs)
       _   -> stripExtension (f ++ [x]) xs
 
--- REMOVE TESTFILES FOLDER EXTENSION
 pySave :: String -> String -> OmniM ()
 pySave s doc = do
-   liftIO $ maybe (return ()) (writeFile ("TestFiles/"++s ++ ".py")) (Just doc)
+   liftIO $ maybe (return ()) (writeFile (s ++ ".py")) (Just doc)
    lift $ outputStrLn ("The file has been successfully created: \
    \" ++ s ++ ".py")
 
--- REMOVE TESTFILES FOLDER EXTENSION
 javaSave :: String -> String -> OmniM ()
 javaSave s doc = do
-   liftIO $ maybe (return ()) (writeFile ("TestFiles/"++s ++ ".java")) (Just doc)
+   liftIO $ maybe (return ()) (writeFile (s ++ ".java")) (Just doc)
    lift $ outputStrLn ("The file has been successfully created: \
    \" ++ s ++ ".java")
 
@@ -144,24 +135,24 @@ toJava s txt =
                      )
                javaSave fName f
 
-toTest :: Int -> OmniM ()
-toTest i = 
-   case testTranslate i "" "0" of
-      Left  err -> error $ show err
-      Right f   -> testSave f
+-- toTest :: Int -> OmniM ()
+-- toTest i = 
+--    case testTranslate i "" "0" of
+--       Left  err -> error $ show err
+--       Right f   -> testSave f
 
-testTranslate :: Int -> String -> String -> Either Error String 
-testTranslate 0 str x = Right $ "def main():\n" ++ str 
-testTranslate i str x = do 
-   let x' = '[' : x ++ "]"
-   let x'' = "\n\tx = " ++ x'
-   testTranslate (i-1) (x'' ++ str) x'
+-- testTranslate :: Int -> String -> String -> Either Error String 
+-- testTranslate 0 str x = Right $ "def main():\n" ++ str 
+-- testTranslate i str x = do 
+--    let x' = '[' : x ++ "]"
+--    let x'' = "\n\tx = " ++ x'
+--    testTranslate (i-1) (x'' ++ str) x'
 
-testSave :: String -> OmniM ()
-testSave f = do
-   liftIO $ maybe (return ()) (writeFile "TestFiles/large.py") (Just f)
-   lift $ outputStrLn "The file has been successfully created: \
-   \large.py"
+-- testSave :: String -> OmniM ()
+-- testSave f = do
+--    liftIO $ maybe (return ()) (writeFile "TestFiles/large.py") (Just f)
+--    lift $ outputStrLn "The file has been successfully created: \
+--    \large.py"
 
 translate :: String -> String -> Lang -> Lang -> Either Error String
 translate txt name lang new = do

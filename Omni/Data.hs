@@ -9,11 +9,23 @@ import qualified Data.Map as M
 type Prog = [Stmt]
 type Ident = String
 
+-- Context that maps variables to their types
+type Ctx  = M.Map Ident Type
+
+-- Context that maps variables to an array containing their shadowed variables
+type SCtx = M.Map Ident [Ident]
+
+-- Context that maps source variables to the current generated variable (or Nothing if the source variable is current)
+type VCtx = M.Map Ident Ident
+
+type Env  = (Ctx, SCtx, VCtx)
+
 
 data Lang where 
    Python :: Lang 
    Java   :: Lang 
    deriving Show
+
 
 data Stmt where 
    Assign    :: [Ident] -> Expr -> Stmt 
@@ -58,15 +70,6 @@ data Literal where
    OtherL :: String -> Literal
    deriving (Show, Eq)
 
--- https://www.w3schools.com/python/python_operators.asp
--- https://www.w3schools.com/java/java_operators.asp
-
--- Java does not have exponentiation built in?
--- Later, could maybe use Math.pow() or whatever add the import in if exp is used 
-
-
-
-
 
 data BOp = Add | Sub | Mul | Div | Mod | Exp
    | And | Or | Eq | NEq | Less | Greater | LessEq | GreaterEq
@@ -82,7 +85,6 @@ data AOp = AddAssign | SubAssign | MulAssign | DivAssign | ModAssign
    | LeftShiftAssign | RightShiftAssign | FloorDivAssign | MatrixMulAssign 
    | OtherA String
    deriving (Show, Eq)
-
 
 
 data Type where 
@@ -105,7 +107,6 @@ data SType where
    Text :: SType 
    None :: SType 
    deriving Show
-
 
 
 data Error where 
@@ -145,28 +146,4 @@ data PrettyError where
    BadAop  :: AOp -> PrettyError 
    Misc    :: String -> PrettyError
    deriving Show
-
-data Constraint where 
-   Stuff :: Constraint 
-   deriving Show
-
-
-
-
-
--- Context that maps variables to their types
-type Ctx  = M.Map Ident Type
-
--- Context that maps variables to an array containing their shadowed variables
-type SCtx = M.Map Ident [Ident]
-
--- Context that maps source variables to the current generated variable (or Nothing if the source variable is current)
-type VCtx = M.Map Ident Ident
-
-type Env  = (Ctx, SCtx, VCtx)
-
-
-
-
-
 

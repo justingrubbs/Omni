@@ -24,8 +24,7 @@ executable omni
                         Omni.Java.Pretty,
                         Omni.Typecheck.Data, 
                         Omni.Typecheck.Elaborate,
-                        Omni.Typecheck.Inference,
-                        Omni.Typecheck.Constraints
+                        Omni.Typecheck.Inference
     -- other-extensions:   
     build-depends:      base >= 4.14.1.0 && < 4.19,
                         directory,

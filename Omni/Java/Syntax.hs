@@ -63,9 +63,7 @@ convertDecl initDecl         = OtherS (prettyPrint initDecl)
 
 -- Functions:
 ---------------------------------------------------------------------
-   -- Might start using this method of lining up equals
-   -- https://www.mygreatlearning.com/blog/polymorphism-in-java/
-convertMemberDecl :: S.MemberDecl -> Stmt -- once implementing functions, change this
+convertMemberDecl :: S.MemberDecl -> Stmt
 convertMemberDecl (S.MethodDecl _ _ ty (S.Ident "main") p _ _ s) 
    = FunDecl "main" [] TyVoid (convertMethodBody s)
 convertMemberDecl (S.MethodDecl _ _ ty v                p _ _ s) 
@@ -141,7 +139,7 @@ convertRefType (S.ArrayType t) =
       x      -> TyArr x
 convertRefType (S.ClassRefType (S.ClassType []))             = undefined
 convertRefType (S.ClassRefType (S.ClassType ((_,ct:_) : _))) = convertTypeArg ct
-convertRefType (S.ClassRefType (S.ClassType [(_, [])]))      = TyStr -- I'm not sure what's happening here really
+convertRefType (S.ClassRefType (S.ClassType [(_, [])]))      = TyStr -- I have absolutely no idea what's going on here
 convertRefType (S.ClassRefType (S.ClassType ((_, []):_:_)))  = error "HOUGROUGWRJIGOW"
 
 convertTypeArg :: S.TypeArgument -> Type
@@ -186,6 +184,7 @@ convertVarInit (S.InitArray arr) = convertArrayInit arr
 
 convertArrayInit :: S.ArrayInit -> Expr 
 convertArrayInit (S.ArrayInit a) = Array (map convertVarInit a)
+
 
 -- Expressions:
 ---------------------------------------------------------------------

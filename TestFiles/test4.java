@@ -12,7 +12,7 @@ public class test4 {
 		if (x == 1) {
 			return y;
 		} else {
-			return facHelp(x - 1,y * (x - 1));
+			return facHelp(x - 1,y * (x - 1));  // Recursion causes elaboration to never end, solution in mind
 		}
 	}
 }

@@ -1,6 +1,8 @@
 def main():
    x = add(3,2)
    y = mul(x,10)
+   print(x)
+   print(y)
    z = True 
    while z:
       x += 1
@@ -12,6 +14,5 @@ def add(x,y):
 
 def mul(x,y):
    return x * y 
-
 
 main()

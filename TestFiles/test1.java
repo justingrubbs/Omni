@@ -31,7 +31,7 @@ public class test1 {
 		System.out.println(H);
 		if (2 == 2) {
 			C = false;
-			System.out.println(H);
+			System.out.println(H);  // Wrong
 			C = true;
 		}
 		if (3 == 2) {

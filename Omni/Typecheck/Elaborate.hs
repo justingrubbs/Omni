@@ -10,7 +10,6 @@ module Omni.Typecheck.Elaborate
 import            Omni.Data
 import            Omni.Typecheck.Data
 import            Omni.Typecheck.Inference   (inferStmt, checkStmt, infer, check)
-import            Omni.Typecheck.Constraints
 import qualified  Data.Map                   as M
 import            Debug.Trace
 import            Data.Maybe                 (fromMaybe)
@@ -110,8 +109,6 @@ elabStmt' (FunDecl v a ty s) = do
    end [stmt]
 elabStmt' (ExprStmt e)      = do
    vCtx <- askV
-   trace (show $ ExprStmt e) $ pure ()
-   trace (show vCtx) $ pure ()
    expr <- elabExpr e
    end [ExprStmt expr]
 elabStmt' (Return e)        = case e of
@@ -195,7 +192,7 @@ elabAugAssign _ _ = undefined
 -- Elaborating blocks:
 ---------------------------------------------------------------------
 elabBlock :: Prog -> Prog -> Contexts (Prog, Env)
-elabBlock []       prog = end prog  -- I am not sure whether the block should be included in the overall progression -- local id ?
+elabBlock []       prog = end prog
 elabBlock (s:rest) prog = do
    (sProg, env) <- elabStmt s
    local (const env) $ elabBlock rest (sProg ++ prog)
@@ -287,7 +284,6 @@ stripError (MainType v t env) = env
 stripError (MainArgs v a env) = env
 
 
-
 -- Elaborating expressions:
 ---------------------------------------------------------------------
 elabExpr :: Expr -> Contexts Expr
@@ -329,9 +325,6 @@ elabFunCall (Call v e)        = do
    args <- getArgs v'
    env' <- argsToCtx env v' e args []
    stmt <- getStmt v'
-   -- (sProg,env'') <- local (const env') $ elabFunDecl stmt
-   -- let [s] = sProg
-   -- putStmt v' s
    local (const env') $ elabFunDecl stmt
    return $ Call v e
 elabFunCall _                      = undefined
@@ -376,7 +369,7 @@ getExpr (Return e)         =
          expr <- getVars e'
          return $ Return (Just expr)
 getExpr (OtherS s)         = return $ OtherS s
--- getExpr x                   = error $ show x ++ " was not intended to be in prog"
+-- getExpr x                  = error $ show x ++ " was not intended to be in prog"
 
 getVars :: Expr -> Contexts Expr
 getVars (Var x)        = Var <$> getVar x

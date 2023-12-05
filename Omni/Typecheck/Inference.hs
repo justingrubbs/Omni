@@ -46,7 +46,7 @@ subtype ty None = do
 checkStmt :: Stmt -> Contexts ()
 checkStmt (AugAssign v a e)   = do
    e' <- infer e
-   subtype e' Num -- This is just wrong? There are other assignment operators that don't operate on numerals
+   subtype e' Num -- This is just wrong - there are other assignment operators that don't operate on numerals
 checkStmt (IfThen e s)        = check e TyBool
 checkStmt (IfElse e s1 s2)    = check e TyBool
 checkStmt (While e s)         = check e TyBool
@@ -194,7 +194,7 @@ inferLit (Str s)    = return TyStr
 inferLit (OtherL l) = error $ "The following literal is not yet implemented: " ++ show l
 inferLit Null       = return TyVoid
 
-inferArray :: Type -> [Expr] -> Contexts Type -- Not sure what is going on here, VSCode recommended changes
+inferArray :: Type -> [Expr] -> Contexts Type
 inferArray ty = foldr
       (\ x
          -> (*>)

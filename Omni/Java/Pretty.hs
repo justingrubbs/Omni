@@ -15,8 +15,7 @@ import            Omni.Data
 printJava :: String -> Prog -> Either PrettyError String
 printJava name prog = do
    str <- prettyJava 1 "" prog
-         -- REMOVE PACKAGE THING ONCE PROJECT DONE
-   Right ("package TestFiles;" ++ "\npublic class " ++ name ++ " {" ++ str ++ "\n}")
+   Right ("public class " ++ name ++ " {" ++ str ++ "\n}")
 
 prettyJava :: Int -> String -> Prog -> Either PrettyError String
 prettyJava i str []        = Right $ reverse str
@@ -140,8 +139,6 @@ printType (TyArgs []) = undefined
 printType (TyArgs (t:rest)) = printType t
 
    
-
-
 -- Expressions:
 ---------------------------------------------------------------------
 printExpr :: Expr -> Either PrettyError String
@@ -174,7 +171,7 @@ printExpr (Call v e)    =
       "main" -> 
          if null e
          then Right "" 
-         else undefined  -- Have not determined what to do whenever a non-main-esque function is defined as main
+         else undefined
       v'     -> do 
          arr <- printArray e ""
          Right (concat v ++ "(" ++ reverse arr ++ ")")
@@ -207,7 +204,7 @@ printString []                    str = Right str
 printString ((Lit (Char c)):rest) str = printString rest (c:str)
 printString e                     _   = do
    arr <- printArray e ""
-   Left (Misc ("Character/string expected in printString, but the following was found instead: " ++ arr))
+   Left (Misc ("String expected in printString, but the following was found instead: " ++ arr))
 
 
 -- Operators:
